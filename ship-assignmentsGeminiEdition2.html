@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ship Assignment Tool</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Mohave:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Configure Tailwind to use custom fonts and colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'mohave': ['Mohave', 'sans-serif'],
+                    },
+                    colors: {
+                        // Custom colors from user request
+                        'mrs-bg': '#1f2937',
+                        'mrs-box': '#1d2735',
+                        'mrs-button': '#2b4e71',
+                        'mrs-button-hover': '#254666', // A slightly darker hover
+                        primary: tailwind.colors.blue,
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Minimal custom styles for drag-and-drop -->
+    <style>
+        .dragging {
+            opacity: 0.5;
+            background: #374151; /* bg-gray-700 */
+        }
+        
+        /* Custom scrollbar for dropdowns */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #374151; /* bg-gray-700 */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563; /* bg-gray-600 */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* bg-gray-500 */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-mrs-bg p-0 font-sans text-gray-200">
+    
+    <!-- Header Bar -->
+    <div class="w-full bg-mrs-box border-b border-gray-700 p-4 shadow-lg">
+        <div class="mx-auto max-w-7xl">
+            <h1 class="flex items-center gap-4 text-left font-mohave text-2xl font-semibold uppercase tracking-wide text-white">
+                <img src="https://staff.medrunner.space/images/medrunner-logo-stable-white.svg" alt="Medrunner Logo" class="h-12 w-auto">
+                <span>Medrunner Operations Tool</span>
+            </h1>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="w-full bg-mrs-box border-b border-gray-700">
+        <div class="mx-auto max-w-7xl px-4">
+            <div class="flex gap-2">
+                <button onclick="switchTab('shipAssignment')" id="tab-shipAssignment" class="tab-button active border-b-2 border-mrs-button px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-gray-700">
+                    Ship Assignment
+                </button>
+                <button onclick="switchTab('aar')" id="tab-aar" class="tab-button border-b-2 border-transparent px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-gray-400 transition hover:bg-gray-700 hover:text-white">
+                    After Action Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="mx-auto max-w-7xl p-4 md:p-8">
+
+        <!-- SHIP ASSIGNMENT TAB -->
+        <div id="content-shipAssignment" class="tab-content">
+        <!-- Ship Groups Card -->
+        <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
+            <div class="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+                <h2 class="font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Ship Groups</h2>
+                <div class="flex w-full items-center gap-3 md:w-auto">
+                    <span id="apiStatus" class="flex-1 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-xs font-medium text-gray-300 md:flex-auto">Loading ships...</span>
+                    <button class="rounded-lg border border-mrs-button bg-mrs-button px-4 py-2 text-sm font-medium text-white transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="refreshShipList()">Refresh Ships</button>
+                </div>
+            </div>
+            <p class="mb-5 rounded-lg border border-blue-900 bg-blue-950/50 p-3 text-sm text-gray-300">
+                💡 <strong class="text-white">Position numbers (1-9)</strong> are optional and help the Team Lead track who has been in the team longest. Multiple people can have the same number. Drag crew members to reorder or move between ships.
+            </p>
+            <div id="shipList" class="mb-5 flex flex-col gap-4"></div>
+            <button class="rounded-lg border border-mrs-button bg-mrs-button px-5 py-2.5 text-sm font-medium text-white shadow-md transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="addShip()">+ Add Ship Group</button>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
+            <h2 class="mb-4 font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Preview</h2>
+            <div id="preview" class="max-h-96 min-h-[100px] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 p-4 font-mono text-sm text-gray-300 whitespace-pre-wrap md:p-6">Add ships and crew members to see preview...</div>
+            <button class="mt-5 w-full rounded-lg border border-mrs-button bg-mrs-button px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="copyToClipboard()">COPY TO CLIPBOARD</button>
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden">
+                <div class="mt-3 rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white">
+                    ✅ Copied to clipboard!
+                </div>
+            </div>
+        </div>
+        </div>
+        <!-- END SHIP ASSIGNMENT TAB -->
+
+        <!-- AAR TAB -->
+        <div id="content-aar" class="tab-content hidden">
+            <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
+                <h2 class="mb-4 font-mohave text-2xl font-semibold uppercase tracking-wide text-white">After Action Report</h2>
+
+                <!-- SHIPS USED Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Ships Used</h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <!-- Gunship -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Gunship</label>
+                            <div class="custom-select-wrapper relative" id="aar-gunship-select">
+                                <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
+                                    <span class="custom-select-value truncate pr-4" id="aar-gunship-value">Select ship...</span>
+                                    <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown absolute left-0 right-0 top-full z-50 mt-1 hidden overflow-hidden rounded-md border border-gray-600 bg-gray-700 shadow-lg">
+                                    <div class="border-b border-gray-600 bg-gray-800 p-2">
+                                        <input type="text" placeholder="Search ships..." class="aar-ship-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                    </div>
+                                    <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto" id="aar-gunship-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Medical</label>
+                            <div class="custom-select-wrapper relative" id="aar-medical-select">
+                                <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
+                                    <span class="custom-select-value truncate pr-4" id="aar-medical-value">Select ship...</span>
+                                    <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown absolute left-0 right-0 top-full z-50 mt-1 hidden overflow-hidden rounded-md border border-gray-600 bg-gray-700 shadow-lg">
+                                    <div class="border-b border-gray-600 bg-gray-800 p-2">
+                                        <input type="text" placeholder="Search ships..." class="aar-ship-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                    </div>
+                                    <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto" id="aar-medical-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CAP -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">CAP</label>
+                            <div class="custom-select-wrapper relative" id="aar-cap-select">
+                                <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
+                                    <span class="custom-select-value truncate pr-4" id="aar-cap-value">Select ship...</span>
+                                    <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown absolute left-0 right-0 top-full z-50 mt-1 hidden overflow-hidden rounded-md border border-gray-600 bg-gray-700 shadow-lg">
+                                    <div class="border-b border-gray-600 bg-gray-800 p-2">
+                                        <input type="text" placeholder="Search ships..." class="aar-ship-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                    </div>
+                                    <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto" id="aar-cap-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Ships -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Additional Ships</label>
+                            <input type="text" id="aar-additional-ships" placeholder="List additional ships..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="mt-4">
+                        <label class="mb-2 block text-sm font-medium text-gray-300">Reason</label>
+                        <input type="text" id="aar-reason" placeholder="e.g., Effectiveness, Required for Situation, Availability..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                    </div>
+                </div>
+
+                <!-- INTERSYSTEM RESPONSE Section -->
+                <div class="mb-6">
+                    <label class="mb-2 flex items-center text-sm font-medium text-gray-400">
+                        <input type="checkbox" id="aar-intersystem-toggle" class="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                        Intersystem Response
+                    </label>
+                </div>
+
+                <!-- LOCATION Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Location</h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <!-- Planetary Body -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Planetary Body</label>
+                            <div class="custom-select-wrapper relative" id="aar-planet-select">
+                                <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
+                                    <span class="custom-select-value truncate pr-4" id="aar-planet-value">Select planetary body...</span>
+                                    <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown absolute left-0 right-0 top-full z-50 mt-1 hidden overflow-hidden rounded-md border border-gray-600 bg-gray-700 shadow-lg">
+                                    <div class="border-b border-gray-600 bg-gray-800 p-2">
+                                        <input type="text" placeholder="Search locations..." class="planet-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                    </div>
+                                    <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto" id="aar-planet-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Type -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Location Type</label>
+                            <select id="aar-location-type" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                <option value="">Select type...</option>
+                                <option value="Bunker">Bunker</option>
+                                <option value="Pickup">Pickup</option>
+                                <option value="Stranded">Stranded</option>
+                                <option value="Space">Space</option>
+                                <option value="Planet">Planet</option>
+                                <option value="PVP Zone">PVP Zone</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Specific POI -->
+                        <div class="md:col-span-2">
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Specific POI</label>
+                            <input type="text" id="aar-poi" placeholder="Enter specific location name..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TIMESTAMPS Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Timestamps (minutes)</h3>
+                    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Alert</label>
+                            <input type="text" id="aar-alert" value="00" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Depart</label>
+                            <input type="text" id="aar-depart" placeholder="5" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Client</label>
+                            <input type="text" id="aar-client" placeholder="15" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">RTB</label>
+                            <input type="text" id="aar-rtb" placeholder="25" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENCOUNTERS Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Encounters</h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">PVE</label>
+                            <input type="text" id="aar-pve" placeholder="e.g., NPCs (9Tails), Natural (Freezing Planet), None" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">PVP</label>
+                            <input type="text" id="aar-pvp" placeholder="e.g., Hostiles, Neutrals, None" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="mb-2 block text-sm font-medium text-gray-300">Actions Taken</label>
+                        <textarea id="aar-actions" rows="3" placeholder="Brief description of tactics and actions..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- ISSUES Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Issues</h3>
+                    <div class="mb-4">
+                        <label class="mb-2 block text-sm font-medium text-gray-300">Problems</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="flex items-center rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm transition hover:bg-gray-600">
+                                <input type="checkbox" value="Login" class="aar-issue-checkbox mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                                Login
+                            </label>
+                            <label class="flex items-center rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm transition hover:bg-gray-600">
+                                <input type="checkbox" value="Undocking" class="aar-issue-checkbox mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                                Undocking
+                            </label>
+                            <label class="flex items-center rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm transition hover:bg-gray-600">
+                                <input type="checkbox" value="Quantum Travel/Jumpgate" class="aar-issue-checkbox mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                                Quantum Travel/Jumpgate
+                            </label>
+                            <label class="flex items-center rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm transition hover:bg-gray-600">
+                                <input type="checkbox" value="30K" class="aar-issue-checkbox mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                                30K
+                            </label>
+                            <label class="flex items-center rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm transition hover:bg-gray-600">
+                                <input type="checkbox" value="Desync" class="aar-issue-checkbox mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                                Desync
+                            </label>
+                            <label class="flex items-center rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm transition hover:bg-gray-600">
+                                <input type="checkbox" value="Elevators" class="aar-issue-checkbox mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-mrs-button focus:ring-2 focus:ring-mrs-button">
+                                Elevators
+                            </label>
+                            <input type="text" id="aar-other-issues" placeholder="Other issues..." class="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-300">Brief Fix</label>
+                        <textarea id="aar-fix" rows="2" placeholder="Describe how issues were resolved..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- SUMMARY Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Summary</h3>
+                    <textarea id="aar-summary" rows="4" placeholder="Short alert description..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
+                </div>
+
+                <!-- RESULT Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Result</h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Client Extracted To</label>
+                            <select id="aar-extracted-to" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                <option value="">Select...</option>
+                                <option value="Station">Station</option>
+                                <option value="Player Ship">Player Ship</option>
+                                <option value="Declined">Declined</option>
+                                <option value="N/A">N/A</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">Challenges</label>
+                            <select id="aar-challenges" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                <option value="">Select...</option>
+                                <option value="Abnormal Events">Abnormal Events (e.g., PvP, Hostage)</option>
+                                <option value="Routine">Routine (e.g., Standard Bunker Rescue)</option>
+                                <option value="Other">Other</option>
+                                <option value="None">None</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="mb-2 block text-sm font-medium text-gray-300">Failure/Abort Reason (if applicable)</label>
+                        <input type="text" id="aar-failure" placeholder="Describe reason for failure or abort..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                    </div>
+                </div>
+
+                <!-- NOTES Section -->
+                <div class="mb-6">
+                    <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Notes</h3>
+                    <textarea id="aar-notes" rows="4" placeholder="Any additional notes..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <button onclick="generateAARPreview()" class="flex-1 rounded-lg border border-mrs-button bg-mrs-button px-6 py-3 font-semibold text-white shadow-md transition hover:border-mrs-button-hover hover:bg-mrs-button-hover">
+                        Generate Preview
+                    </button>
+                    <button onclick="clearAAR()" class="rounded-lg border border-gray-600 bg-gray-700 px-6 py-3 font-semibold text-white transition hover:bg-gray-600">
+                        Clear Form
+                    </button>
+                </div>
+            </div>
+
+            <!-- AAR Preview Card -->
+            <div class="rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
+                <h2 class="mb-4 font-mohave text-2xl font-semibold uppercase tracking-wide text-white">AAR Preview</h2>
+                <div id="aar-preview" class="max-h-96 min-h-[100px] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 p-4 font-mono text-sm text-gray-300 whitespace-pre-wrap md:p-6">Generate AAR to see preview...</div>
+                <button class="mt-5 w-full rounded-lg border border-mrs-button bg-mrs-button px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="copyAARToClipboard()">COPY AAR TO CLIPBOARD</button>
+                <!-- Success Message -->
+                <div id="aar-successMessage" class="hidden">
+                    <div class="mt-3 rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white">
+                        ✅ Copied to clipboard!
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END AAR TAB -->
+    </div>
+
+    <script>
+        // ... (Emoji definitions and all API logic remains unchanged) ...
+        // Emoji definitions
+        const EMOJIS = {
+            header: '<:Medrunner:1054921406091112558>',
+            shipTypes: {
+                'Gunship': '<:MDRgun:1104388682116518018>',
+                'Medship': '<:MDRhug:1127961815977046130>',
+                'CAP': '<:MDRknife:1104388679641874522>'
+            },
+            roles: {
+                'PIL': '<:MRS_Pilot:984839934273806356>',
+                'LEAD': '<:MRS_Teamlead:1073627559272652820>',
+                'MED': '<:MRS_Medical:984839920755568680>',
+                'SEC': '<:MRS_Security:984839927604871218>',
+                'CAP': '<:CAP:1355255191854645407>'
+            },
+            positions: {
+                1: '<:P1:1432823559364935852>',
+                2: '<:P2:1432823555698982973>',
+                3: '<:P3:1432823553186861109>',
+                4: '<:P4:1432823550997299330>',
+                5: '<:P5:1432823546426433576>',
+                6: '<:P6:1432823542840848414>',
+                7: '<:P7:1432823539175137350>',
+                8: '<:P8:1432823535509561464>',
+                9: '<:P9:1432823537915396280>'
+            }
+        };
+
+        // Star Citizen flyable ships list - will be populated from API
+        let SHIPS = [];
+
+        // Fallback ship list in case API fails
+        const FALLBACK_SHIPS = [
+            'Aegis Avenger Titan',
+            'Aegis Gladius',
+            'Aegis Sabre',
+            'Aegis Vanguard Warden',
+            'Aegis Hammerhead',
+            'Aegis Redeemer',
+            'Anvil Arrow',
+            'Anvil Carrack',
+            'Anvil Paladin',
+            'Drake Cutlass Black',
+            'Drake Cutlass Red',
+            'MISC Freelancer',
+            'RSI Apollo Medivac',
+            'RSI Apollo Triage',
+            'RSI Constellation Andromeda'
+        ].sort();
+
+        // Fetch all pages from FleetYards API
+        async function fetchAllFleetYardsPages() {
+            let allShips = [];
+            let page = 1;
+            const perPage = 200; // Maximum allowed per page
+
+            try {
+                while (true) {
+                    const url = `https://api.fleetyards.net/v1/models?page=${page}&perPage=${perPage}`;
+                    console.log(`Fetching FleetYards page ${page}...`);
+
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        mode: 'cors',
+                    });
+
+                    if (!response.ok) {
+                        console.warn(`FleetYards page ${page} returned status ${response.status}`);
+                        break;
+                    }
+
+                    const data = await response.json();
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        break; // No more data
+                    }
+
+                    allShips.push(...data);
+                    console.log(`Fetched ${data.length} ships from page ${page}, total: ${allShips.length}`);
+
+                    // If we got less than perPage, we're on the last page
+                    if (data.length < perPage) {
+                        break;
+                    }
+
+                    page++;
+                }
+
+                return allShips;
+            } catch (error) {
+                console.error('Error fetching FleetYards data:', error);
+                return null;
+            }
+        }
+
+        // API endpoints to try (in order)
+        const API_SOURCES = [
+            {
+                name: 'FleetYards',
+                fetchData: fetchAllFleetYardsPages,
+                parse: (data) => {
+                    // Parse the response and extract ship names
+                    if (Array.isArray(data)) {
+                        return data
+                            .filter(ship => {
+                                // Filter for flight-ready ships only
+                                const status = ship.productionStatus?.toLowerCase() || '';
+                                return status === 'flight-ready' || status === 'in-service';
+                            })
+                            .map(ship => {
+                                const manufacturer = ship.manufacturer?.name || ship.manufacturer?.code || '';
+                                const name = ship.name || '';
+                                return manufacturer ? `${manufacturer} ${name}` : name;
+                            })
+                            .filter(name => name.trim().length > 0);
+                    }
+                    return null;
+                }
+            },
+            {
+                name: 'FleetYards (All Ships)',
+                fetchData: fetchAllFleetYardsPages,
+                parse: (data) => {
+                    // Fallback: get ALL ships if flight-ready filter returns too few
+                    if (Array.isArray(data)) {
+                        return data
+                            .map(ship => {
+                                const manufacturer = ship.manufacturer?.name || ship.manufacturer?.code || '';
+                                const name = ship.name || '';
+                                return manufacturer ? `${manufacturer} ${name}` : name;
+                            })
+                            .filter(name => name.trim().length > 0);
+                    }
+                    return null;
+                }
+            }
+        ];
+
+        // Fetch ships from API
+        async function fetchShipsFromAPI() {
+            // Check cache first (24 hour expiry)
+            const cached = localStorage.getItem('scShipsCache');
+            const cacheTime = localStorage.getItem('scShipsCacheTime');
+
+            if (cached && cacheTime) {
+                const age = Date.now() - parseInt(cacheTime);
+                if (age < 24 * 60 * 60 * 1000) { // 24 hours
+                    console.log('Using cached ship list');
+                    return JSON.parse(cached);
+                }
+            }
+
+            // Try each API source
+            for (const source of API_SOURCES) {
+                try {
+                    console.log(`Trying to fetch ships from ${source.name}...`);
+
+                    const data = await source.fetchData();
+
+                    if (data) {
+                        console.log(`Received ${data.length} raw ships from ${source.name}`);
+                        const ships = source.parse(data);
+
+                        if (ships && ships.length > 0) {
+                            const sortedShips = ships.sort();
+                            console.log(`✅ Successfully fetched ${sortedShips.length} ships from ${source.name}`);
+
+                            // Cache the results
+                            localStorage.setItem('scShipsCache', JSON.stringify(sortedShips));
+                            localStorage.setItem('scShipsCacheTime', Date.now().toString());
+                            localStorage.setItem('scShipsSource', source.name);
+
+                            return sortedShips;
+                        } else {
+                            console.warn(`${source.name} returned no ships after parsing`);
+                        }
+                    } else {
+                        console.warn(`${source.name} returned no data`);
+                    }
+                } catch (error) {
+                    console.warn(`Failed to fetch from ${source.name}:`, error.message);
+                }
+            }
+
+            // All APIs failed, use fallback
+            console.warn('All APIs failed, using fallback ship list');
+            return FALLBACK_SHIPS;
+        }
+
+        // Update API status indicator
+        function updateAPIStatus(status, message, source = '') {
+            const statusEl = document.getElementById('apiStatus');
+            if (!statusEl) return;
+
+            // Reset classes
+            statusEl.className = 'rounded-lg border px-3 py-2 text-xs font-medium flex-1 md:flex-auto';
+
+            // Add appropriate color classes based on status
+            if (status === 'success') {
+                statusEl.classList.add('border-gray-600', 'bg-gray-700', 'text-gray-300');
+            } else if (status === 'error') {
+                statusEl.classList.add('border-red-600', 'bg-red-900', 'text-red-200');
+            } else { // loading
+                statusEl.classList.add('border-gray-600', 'bg-gray-700', 'text-gray-300', 'animate-pulse');
+            }
+
+            statusEl.textContent = message + (source ? ` (${source})` : '');
+        }
+
+        // Initialize ships on page load
+        async function initializeShips() {
+            updateAPIStatus('loading', 'Loading ships...');
+            SHIPS = await fetchShipsFromAPI();
+            console.log(`Loaded ${SHIPS.length} ships`);
+
+            // Determine which source was used
+            const source = localStorage.getItem('scShipsSource') || 'unknown';
+            const cached = localStorage.getItem('scShipsCache');
+            const cacheTime = localStorage.getItem('scShipsCacheTime');
+
+            if (cached && cacheTime) {
+                const age = Date.now() - parseInt(cacheTime);
+                if (age < 24 * 60 * 60 * 1000 && JSON.parse(cached).length === SHIPS.length) {
+                    const hours = Math.floor(age / (60 * 60 * 1000));
+                    updateAPIStatus('success', `${SHIPS.length} ships`, `cached ${hours}h ago from ${source}`);
+                    return;
+                }
+            }
+
+            if (SHIPS.length === FALLBACK_SHIPS.length) {
+                updateAPIStatus('error', `${SHIPS.length} ships`, 'fallback - API unavailable');
+            } else {
+                updateAPIStatus('success', `${SHIPS.length} ships`, source);
+            }
+        }
+
+        // Refresh ship list from API (bypass cache)
+        async function refreshShipList() {
+            updateAPIStatus('loading', 'Refreshing ships...');
+
+            // Clear cache
+            localStorage.removeItem('scShipsCache');
+            localStorage.removeItem('scShipsCacheTime');
+            localStorage.removeItem('scShipsSource');
+
+            // Fetch fresh data
+            SHIPS = await fetchShipsFromAPI();
+
+            const source = localStorage.getItem('scShipsSource') || 'unknown';
+
+            if (SHIPS.length === FALLBACK_SHIPS.length) {
+                updateAPIStatus('error', `${SHIPS.length} ships`, 'fallback - API unavailable');
+            } else {
+                updateAPIStatus('success', `${SHIPS.length} ships refreshed`, source);
+            }
+
+            // Re-render any existing ships to update dropdowns
+            renderShips();
+        }
+
+        // Call initialization
+        initializeShips();
+
+        let ships = [];
+        let shipIdCounter = 0;
+
+        function addShip() {
+            const shipId = shipIdCounter++;
+
+            // Determine ship type based on existing ships
+            let shipType = 'Gunship'; // Default first ship
+
+            const hasGunship = ships.some(s => s.type === 'Gunship');
+            const hasMedship = ships.some(s => s.type === 'Medship');
+
+            if (hasGunship && !hasMedship) {
+                shipType = 'Medship';
+            } else if (hasGunship && hasMedship) {
+                shipType = 'CAP';
+            }
+
+            ships.push({
+                id: shipId,
+                type: shipType,
+                ship: '',
+                crew: []
+            });
+            renderShips();
+            updatePreview();
+        }
+
+        function removeShip(shipId) {
+            ships = ships.filter(s => s.id !== shipId);
+            // No position update needed, numbers are sticky
+            renderShips();
+            updatePreview();
+        }
+
+        function addCrewMember(shipId) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                let newRole = 'PIL'; // Default role
+                const crewCount = ship.crew.length;
+
+                if (crewCount === 0) {
+                    // First crew member logic
+                    switch (ship.type) {
+                        case 'Gunship':
+                            newRole = 'PIL';
+                            break;
+                        case 'Medship':
+                            newRole = 'MED';
+                            break;
+                        case 'CAP':
+                            newRole = 'CAP';
+                            break;
+                        default:
+                            newRole = 'PIL'; // Default to Pilot if type is unknown
+                    }
+                } else {
+                    // Subsequent crew member logic
+                    switch (ship.type) {
+                        case 'Gunship':
+                            const hasLead = ship.crew.some(c => c.role === 'LEAD');
+                            if (!hasLead) {
+                                newRole = 'LEAD';
+                            } else {
+                                const hasMed = ship.crew.some(c => c.role === 'MED');
+                                if (!hasMed) {
+                                    newRole = 'MED';
+                                } else {
+                                    newRole = 'SEC';
+                                }
+                            }
+                            break;
+                        case 'Medship':
+                            newRole = 'SEC';
+                            break;
+                        case 'CAP':
+                            newRole = 'SEC'; // Default subsequent CAP to Security
+                            break;
+                        default:
+                            newRole = 'SEC'; // Default all other subsequent to Security
+                    }
+                }
+
+                // --- New Position Logic ---
+                let newPosition = null;
+                let highestNumber = 0;
+                
+                // Find the highest existing number across all ships
+                ships.forEach(s => {
+                    s.crew.forEach(c => {
+                        if (c.position && c.position > highestNumber) {
+                            highestNumber = c.position;
+                        }
+                    });
+                });
+
+                // If anyone has a number, set the new one to highest + 1
+                if (highestNumber > 0 && highestNumber < 9) {
+                    newPosition = highestNumber + 1;
+                } else if (highestNumber >= 9) {
+                    newPosition = null; // Don't assign if 9 is taken
+                }
+                // If highestNumber is 0, newPosition remains null (blank)
+
+                ship.crew.push({
+                    id: Date.now(),
+                    role: newRole, // Use the determined role
+                    position: newPosition, // Use the new smart-increment logic
+                    name: '',
+                    discordId: '',
+                    comment: '' // Add new comment field
+                });
+                renderShips();
+                updatePreview();
+            }
+        }
+
+        function removeCrewMember(shipId, crewId) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                let removedPosition = null;
+                const crewMemberToRemove = ship.crew.find(c => c.id === crewId);
+                
+                if (crewMemberToRemove) {
+                    removedPosition = crewMemberToRemove.position; // Get the position, e.g., 3 or null
+                }
+
+                // Filter the crew member out
+                ship.crew = ship.crew.filter(c => c.id !== crewId);
+
+                // --- NEW SHUFFLE LOGIC ---
+                // Only shuffle if the removed member had a valid position
+                if (removedPosition) { 
+                    // Iterate over ALL ships and ALL crew to find numbers higher than the one removed
+                    ships.forEach(s => {
+                        s.crew.forEach(c => {
+                            if (c.position && c.position > removedPosition) {
+                                c.position -= 1; // Shuffle down
+                            }
+                        });
+                    });
+                }
+                // --- END OF NEW LOGIC ---
+
+                renderShips();
+                updatePreview();
+            }
+        }
+
+        function updateShipType(shipId, type) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                ship.type = type;
+                updatePreview();
+            }
+        }
+
+        function updateShipName(shipId, name) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                ship.ship = name;
+                updatePreview();
+            }
+        }
+
+        function updateCrewRole(shipId, crewId, role) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                const crew = ship.crew.find(c => c.id === crewId);
+                if (crew) {
+                    crew.role = role;
+                    updatePreview();
+                }
+            }
+        }
+
+        function updateCrewPosition(shipId, crewId, position) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                const crew = ship.crew.find(c => c.id === crewId);
+                if (crew) {
+                    // Store blank as null, otherwise parse as number
+                    crew.position = position ? parseInt(position) : null;
+                    updatePreview();
+                }
+            }
+        }
+
+        function updateCrewName(shipId, crewId, name) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                const crew = ship.crew.find(c => c.id === crewId);
+                if (crew) {
+                    crew.name = name;
+                    // Name doesn't affect preview, so no need to updatePreview()
+                }
+            }
+        }
+
+        function updateCrewDiscordId(shipId, crewId, discordId) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                const crew = ship.crew.find(c => c.id === crewId);
+                if (crew) {
+                    crew.discordId = discordId;
+                    updatePreview();
+                }
+            }
+        }
+
+        function updateCrewComment(shipId, crewId, comment) {
+            const ship = ships.find(s => s.id === shipId);
+            if (ship) {
+                const crew = ship.crew.find(c => c.id === crewId);
+                if (crew) {
+                    crew.comment = comment;
+                    updatePreview();
+                }
+            }
+        }
+
+        function initializeCustomSelect(selectId, shipId) {
+            const wrapper = document.getElementById(selectId);
+            if (!wrapper) return;
+
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const arrow = wrapper.querySelector('.custom-select-arrow');
+            const dropdown = wrapper.querySelector('.custom-select-dropdown');
+            const searchInput = wrapper.querySelector('.ship-search-input');
+            const optionsContainer = wrapper.querySelector('.custom-select-options');
+            const valueDisplay = wrapper.querySelector('.custom-select-value');
+
+            // Toggle dropdown
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = !dropdown.classList.contains('hidden');
+
+                // Close all other dropdowns
+                document.querySelectorAll('.custom-select-dropdown').forEach(dd => {
+                    if (dd !== dropdown) {
+                        dd.classList.add('hidden');
+                        const otherTrigger = dd.previousElementSibling;
+                        otherTrigger.classList.remove('ring-1', 'ring-primary-500', 'border-primary-500');
+                        otherTrigger.querySelector('.custom-select-arrow').classList.remove('rotate-180');
+                    }
+                });
+
+                // Toggle this dropdown
+                dropdown.classList.toggle('hidden');
+                trigger.classList.toggle('ring-1');
+                trigger.classList.toggle('ring-primary-500');
+                trigger.classList.toggle('border-primary-500');
+                arrow.classList.toggle('rotate-180');
+
+                if (!isOpen) {
+                    searchInput.value = ''; // Clear search
+                    searchInput.focus();
+                    // Show all options
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('hidden'));
+                }
+            });
+
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    option.classList.toggle('hidden', !text.includes(searchTerm));
+                });
+            });
+
+            // Prevent search input from closing dropdown
+            searchInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            // Option selection
+            optionsContainer.addEventListener('click', (e) => {
+                const option = e.target.closest('.custom-select-option');
+                if (!option) return;
+                
+                const value = option.dataset.value;
+
+                // Update selected state
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
+                    opt.classList.remove('bg-mrs-button', 'text-white');
+                });
+                option.classList.add('bg-mrs-button', 'text-white');
+
+                // Update display
+                valueDisplay.textContent = value;
+
+                // Update ship name
+                updateShipName(shipId, value);
+
+                // Close dropdown
+                dropdown.classList.add('hidden');
+                trigger.classList.remove('ring-1', 'ring-primary-500', 'border-primary-500');
+                arrow.classList.remove('rotate-180');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                    trigger.classList.remove('ring-1', 'ring-primary-500', 'border-primary-500');
+                    arrow.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        function renderShips() {
+            const container = document.getElementById('shipList');
+            container.innerHTML = '';
+
+            ships.forEach((ship) => {
+                const shipDiv = document.createElement('div');
+                const customSelectId = `custom-select-${ship.id}`;
+
+                // Ship Card
+                shipDiv.className = 'rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-md';
+                shipDiv.innerHTML = `
+                    <div class="mb-3 flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
+                        <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+                            <!-- Ship Type Select -->
+                            <select onchange="updateShipType(${ship.id}, this.value)" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
+                                ${Object.keys(EMOJIS.shipTypes).map(type =>
+                                    `<option value="${type}" ${ship.type === type ? 'selected' : ''}>${type}</option>`
+                                ).join('')}
+                            </select>
+                            
+                            <!-- Custom Ship Name Select -->
+                            <div class="custom-select-wrapper relative w-full min-w-[250px] md:w-auto" id="${customSelectId}">
+                                <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
+                                    <span class="custom-select-value truncate pr-4">${ship.ship || 'Select a ship...'}</span>
+                                    <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown absolute left-0 right-0 top-full z-50 mt-1 hidden overflow-hidden rounded-md border border-gray-600 bg-gray-700 shadow-lg">
+                                    <div class="border-b border-gray-600 bg-gray-800 p-2">
+                                        <input type="text" placeholder="Search ships..." class="ship-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                    </div>
+                                    <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto">
+                                        ${SHIPS.map(shipName =>
+                                            `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white ${shipName === ship.ship ? 'bg-mrs-button text-white' : ''}" data-value="${shipName}">${shipName}</div>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="w-full flex-shrink-0 rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 hover:border-red-700 md:w-auto" onclick="removeShip(${ship.id})">Remove Ship</button>
+                    </div>
+                    
+                    <!-- Crew List -->
+                    <div id="crew-${ship.id}" data-ship-id="${ship.id}" class="crew-list flex min-h-[50px] flex-col gap-2 rounded-md border-2 border-dashed border-gray-800 p-2"></div>
+                    
+                    <!-- Add Crew Button -->
+                    <button class="mt-3 rounded-lg border border-mrs-button bg-mrs-button px-4 py-2 text-sm font-medium text-white transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="addCrewMember(${ship.id})">+ Add Crew Member</button>
+                `;
+                container.appendChild(shipDiv);
+
+                // Initialize custom select
+                initializeCustomSelect(customSelectId, ship.id);
+
+                // Render crew members
+                const crewContainer = document.getElementById(`crew-${ship.id}`);
+
+                // Allow dropping on empty crew lists
+                crewContainer.addEventListener('dragover', handleDragOver);
+                crewContainer.addEventListener('drop', handleDropOnEmptyList);
+
+                ship.crew.forEach((crew) => {
+                    const crewDiv = document.createElement('div');
+                    crewDiv.className = 'crew-member flex flex-wrap cursor-move items-center gap-2 rounded-lg border border-gray-700 bg-mrs-bg p-2 shadow-sm';
+                    crewDiv.draggable = true;
+                    crewDiv.dataset.crewId = crew.id;
+                    crewDiv.innerHTML = `
+                        <!-- Position Select (Manual) -->
+                        <select onchange="updateCrewPosition(${ship.id}, ${crew.id}, this.value)" class="flex-shrink-0 min-w-[60px] cursor-pointer rounded-lg border border-mrs-button bg-mrs-box px-2 py-2 text-center text-sm font-semibold text-blue-300 transition hover:bg-mrs-button-hover focus:outline-none focus:ring-2 focus:ring-mrs-button">
+                            <option value="" ${!crew.position ? 'selected' : ''}>-</option>
+                            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num =>
+                                `<option value="${num}" ${(crew.position || "") === num ? 'selected' : ''}>${num}</option>`
+                            ).join('')}
+                        </select>
+                        
+                        <!-- Role Select -->
+                        <select onchange="updateCrewRole(${ship.id}, ${crew.id}, this.value)" class="flex-none min-w-[100px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
+                            ${Object.keys(EMOJIS.roles).map(role =>
+                                `<option value="${role}" ${crew.role === role ? 'selected' : ''}>${role}</option>`
+                            ).join('')}
+                        </select>
+                        
+                        <!-- Name Input -->
+                        <input type="text" placeholder="Name (optional)"
+                               value="${crew.name || ''}"
+                               onchange="updateCrewName(${ship.id}, ${crew.id}, this.value)"
+                               class="hidden w-36 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:italic placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:block">
+                        
+                        <!-- Discord ID Input -->
+                        <input type="text" placeholder="Discord ID (e.g., 640...)"
+                               value="${crew.discordId}"
+                               onchange="updateCrewDiscordId(${ship.id}, ${crew.id}, this.value)"
+                               class="flex-1 min-w-[150px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:flex-none md:w-48">
+                        
+                        <!-- Comment Input -->
+                        <input type="text" placeholder="Comment (e.g., Turret)"
+                               value="${crew.comment || ''}"
+                               onchange="updateCrewComment(${ship.id}, ${crew.id}, this.value)"
+                               class="flex-1 min-w-[150px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:italic placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        
+                        <!-- Remove Crew Button -->
+                        <button class="flex-shrink-0 rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 hover:border-red-700" onclick="removeCrewMember(${ship.id}, ${crew.id})">×</button>
+                    `;
+
+                    // Drag and drop handlers
+                    crewDiv.addEventListener('dragstart', handleDragStart);
+                    crewDiv.addEventListener('dragend', handleDragEnd);
+                    crewDiv.addEventListener('dragover', handleDragOver);
+                    crewDiv.addEventListener('drop', handleDrop);
+
+                    crewContainer.appendChild(crewDiv);
+                });
+            });
+        }
+
+        let draggedElement = null;
+        let draggedShipId = null;
+
+        function handleDragStart(e) {
+            // Check if the event target is an input or select
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+                e.preventDefault();
+                return;
+            }
+            draggedElement = e.target.closest('.crew-member');
+            if (!draggedElement) return;
+
+            draggedShipId = parseInt(draggedElement.closest('.crew-list').dataset.shipId);
+            // Use setTimeout to allow the browser to render the drag image
+            setTimeout(() => {
+                draggedElement.classList.add('dragging');
+            }, 0);
+        }
+
+        function handleDragEnd(e) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            if (!draggedElement) return;
+
+            const targetElement = e.target.closest('.crew-member');
+            if (targetElement && targetElement !== draggedElement) {
+                const targetShipId = parseInt(targetElement.closest('.crew-list').dataset.shipId);
+                const draggedShip = ships.find(s => s.id === draggedShipId);
+                const targetShip = ships.find(s => s.id === targetShipId);
+
+                const draggedCrewId = parseInt(draggedElement.dataset.crewId);
+                const targetCrewId = parseInt(targetElement.dataset.crewId);
+
+                if (draggedShipId === targetShipId) {
+                    // Reordering within the same ship
+                    const draggedIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+                    const targetIndex = draggedShip.crew.findIndex(c => c.id === targetCrewId);
+
+                    // Swap positions
+                    [draggedShip.crew[draggedIndex], draggedShip.crew[targetIndex]] =
+                        [draggedShip.crew[targetIndex], draggedShip.crew[draggedIndex]];
+                } else {
+                    // Moving crew member to a different ship
+                    const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+                    const targetCrewIndex = targetShip.crew.findIndex(c => c.id === targetCrewId);
+
+                    // Remove from original ship
+                    const crewMember = draggedShip.crew.splice(draggedCrewIndex, 1)[0];
+
+                    // Insert into target ship at target position
+                    targetShip.crew.splice(targetCrewIndex, 0, crewMember);
+                }
+                
+                // No position update needed, numbers are sticky
+                renderShips();
+                updatePreview();
+            }
+        }
+
+        function handleDropOnEmptyList(e) {
+            e.preventDefault();
+            if (!draggedElement) return;
+
+            // Only handle if dropped on the crew list itself, not on a crew member
+            if (e.target.classList.contains('crew-list')) {
+                const targetShipId = parseInt(e.target.dataset.shipId);
+                const draggedShip = ships.find(s => s.id === draggedShipId);
+                const targetShip = ships.find(s => s.id === targetShipId);
+
+                // Only move if dragging to a different ship
+                if (draggedShipId !== targetShipId) {
+                    const draggedCrewId = parseInt(draggedElement.dataset.crewId);
+                    const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+
+                    // Remove from original ship
+                    const crewMember = draggedShip.crew.splice(draggedCrewIndex, 1)[0];
+
+                    // Add to end of target ship
+                    targetShip.crew.push(crewMember);
+
+                    // No position update needed
+                    renderShips();
+                    updatePreview();
+                }
+            }
+        }
+
+        function generateOutput() {
+            // Generate UTC timestamp for Discord relative time
+            const timestamp = Math.floor(Date.now() / 1000);
+
+            let output = `# __${EMOJIS.header}SHIP ASSIGNMENTS${EMOJIS.header}__\n\n`;
+
+            ships.forEach(ship => {
+                if (ship.crew.length > 0) {
+                    const shipTypeEmoji = EMOJIS.shipTypes[ship.type] || '🚀';
+                    output += `## __**${ship.type}**__ ${shipTypeEmoji} ${ship.ship}\n`;
+
+                    ship.crew.forEach(crew => {
+                        const roleEmoji = EMOJIS.roles[crew.role] || '👤';
+                        const mention = crew.discordId ? `<@${crew.discordId}>` : '[No Discord ID]';
+                        
+                        let positionText = '';
+                        if (crew.position) {
+                            const positionEmoji = EMOJIS.positions[crew.position] || crew.position;
+                            positionText = ` ${positionEmoji}`; // Only add if position is set
+                        }
+                        
+                        let commentText = '';
+                        if (crew.comment && crew.comment.trim() !== '') {
+                            commentText = ` (${crew.comment.trim()})`; // Add leading space and parenthesis
+                        }
+                        
+                        output += `> ${roleEmoji} - ${mention}${positionText}${commentText}\n`;
+                    });
+
+                    output += '\n';
+                }
+            });
+
+            // Add timestamp at the end in smaller text
+            output += `-# Updated <t:${timestamp}:R>`;
+
+            return output;
+        }
+
+        function updatePreview() {
+            const preview = document.getElementById('preview');
+            if (ships.length === 0 || ships.every(s => s.crew.length === 0)) {
+                preview.textContent = 'Add ships and crew members to see preview...';
+            } else {
+                preview.textContent = generateOutput();
+            }
+        }
+
+        function copyToClipboard() {
+            const output = generateOutput();
+
+            // Use execCommand as a fallback for clipboard API
+            if (!navigator.clipboard) {
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = output;
+                    textArea.style.position = 'fixed'; // Prevent scrolling to bottom
+                    textArea.style.top = '0';
+                    textArea.style.left = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showSuccessMessage();
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                    alert('Failed to copy to clipboard. Please try again.');
+                }
+                return;
+            }
+
+            navigator.clipboard.writeText(output).then(() => {
+                showSuccessMessage();
+            }).catch(err => {
+                alert('Failed to copy to clipboard. Please try again.');
+                console.error('Failed to copy:', err);
+            });
+        }
+        
+        function showSuccessMessage() {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.classList.remove('hidden');
+            setTimeout(() => {
+                successMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Initialize with empty state
+        renderShips();
+
+        // ===== AAR FUNCTIONALITY =====
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active state from all tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active', 'border-mrs-button', 'text-white');
+                button.classList.add('border-transparent', 'text-gray-400');
+            });
+
+            // Show selected tab content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+
+            // Add active state to selected tab
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('active', 'border-mrs-button', 'text-white');
+            activeTab.classList.remove('border-transparent', 'text-gray-400');
+
+            // If switching to AAR tab, populate ship dropdowns
+            if (tabName === 'aar') {
+                populateAARShipDropdowns();
+            }
+        }
+
+        // Planetary bodies data
+        let PLANETARY_BODIES = [];
+
+        // Star Citizen planetary bodies (comprehensive list)
+        const PLANETARY_BODIES_LIST = [
+            // Stanton System
+            'Crusader', 'Orison', 'Yela', 'Daymar', 'Cellin',
+            'ArcCorp', 'Area18', 'Lyria', 'Wala',
+            'Hurston', 'Lorville', 'Aberdeen', 'Arial', 'Magda', 'Ita',
+            'microTech', 'New Babbage', 'Calliope', 'Clio', 'Euterpe',
+            'Port Olisar', 'Baijini Point', 'Everus Harbor', 'Seraphim Station', 'Port Tressler',
+            // Pyro System
+            'Pyro I', 'Pyro II', 'Pyro III', 'Pyro IV', 'Pyro V', 'Pyro VI',
+            'Bloom', 'Monox', 'Terminus',
+            'Checkmate Station', 'Ruin Station', 'New Babbage', 'Pyro Gateway',
+            // Other notable locations
+            'CRU-L1', 'CRU-L4', 'CRU-L5', 'HUR-L1', 'HUR-L2', 'HUR-L3', 'HUR-L4', 'HUR-L5',
+            'ARC-L1', 'MIC-L1', 'MIC-L2'
+        ].sort();
+
+        // Initialize planetary bodies
+        async function initializePlanetaryBodies() {
+            PLANETARY_BODIES = PLANETARY_BODIES_LIST;
+            populateAARPlanetDropdown();
+        }
+
+        // Populate AAR ship dropdowns from current ship assignments
+        function populateAARShipDropdowns() {
+            const assignedShips = ships.map(s => s.ship).filter(s => s && s.trim() !== '');
+
+            // Get unique ships (in case of duplicates)
+            const uniqueShips = [...new Set(assignedShips)];
+
+            // Populate each ship dropdown
+            populateAARShipDropdown('aar-gunship', uniqueShips);
+            populateAARShipDropdown('aar-medical', uniqueShips);
+            populateAARShipDropdown('aar-cap', uniqueShips);
+        }
+
+        function populateAARShipDropdown(selectId, assignedShips) {
+            const optionsContainer = document.getElementById(selectId + '-options');
+            if (!optionsContainer) return;
+
+            let options = '';
+
+            // Add assigned ships first if any
+            if (assignedShips.length > 0) {
+                options += '<div class="px-3 py-2 text-xs font-semibold uppercase text-blue-300 bg-gray-800">From Assignments</div>';
+                assignedShips.forEach(ship => {
+                    options += `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white" data-value="${ship}">${ship}</div>`;
+                });
+                options += '<div class="border-t border-gray-600 my-1"></div>';
+                options += '<div class="px-3 py-2 text-xs font-semibold uppercase text-blue-300 bg-gray-800">All Ships</div>';
+            }
+
+            // Add all ships from SHIPS array
+            SHIPS.forEach(ship => {
+                options += `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white" data-value="${ship}">${ship}</div>`;
+            });
+
+            optionsContainer.innerHTML = options;
+
+            // Initialize the select
+            initializeAARSelect(selectId);
+        }
+
+        function populateAARPlanetDropdown() {
+            const optionsContainer = document.getElementById('aar-planet-options');
+            if (!optionsContainer) return;
+
+            let options = '';
+            PLANETARY_BODIES.forEach(planet => {
+                options += `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white" data-value="${planet}">${planet}</div>`;
+            });
+
+            optionsContainer.innerHTML = options;
+            initializeAARPlanetSelect();
+        }
+
+        // Initialize AAR ship select
+        function initializeAARSelect(selectId) {
+            const wrapper = document.getElementById(selectId + '-select');
+            if (!wrapper) return;
+
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const arrow = wrapper.querySelector('.custom-select-arrow');
+            const dropdown = wrapper.querySelector('.custom-select-dropdown');
+            const searchInput = wrapper.querySelector('.aar-ship-search-input');
+            const optionsContainer = wrapper.querySelector('.custom-select-options');
+            const valueDisplay = document.getElementById(selectId + '-value');
+
+            // Remove old event listeners by cloning
+            const newTrigger = trigger.cloneNode(true);
+            trigger.parentNode.replaceChild(newTrigger, trigger);
+
+            newTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = !dropdown.classList.contains('hidden');
+
+                document.querySelectorAll('.custom-select-dropdown').forEach(dd => {
+                    if (dd !== dropdown) {
+                        dd.classList.add('hidden');
+                    }
+                });
+
+                dropdown.classList.toggle('hidden');
+                newTrigger.classList.toggle('ring-1');
+                newTrigger.classList.toggle('ring-primary-500');
+                arrow.classList.toggle('rotate-180');
+
+                if (!isOpen) {
+                    searchInput.value = '';
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('hidden'));
+                    searchInput.focus();
+                }
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    option.classList.toggle('hidden', !text.includes(searchTerm));
+                });
+            });
+
+            searchInput.addEventListener('click', (e) => e.stopPropagation());
+
+            optionsContainer.addEventListener('click', (e) => {
+                const option = e.target.closest('.custom-select-option');
+                if (!option) return;
+
+                const value = option.dataset.value;
+                valueDisplay.textContent = value;
+
+                dropdown.classList.add('hidden');
+                newTrigger.classList.remove('ring-1', 'ring-primary-500');
+                arrow.classList.remove('rotate-180');
+            });
+        }
+
+        // Initialize AAR planet select
+        function initializeAARPlanetSelect() {
+            const wrapper = document.getElementById('aar-planet-select');
+            if (!wrapper) return;
+
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const arrow = wrapper.querySelector('.custom-select-arrow');
+            const dropdown = wrapper.querySelector('.custom-select-dropdown');
+            const searchInput = wrapper.querySelector('.planet-search-input');
+            const optionsContainer = wrapper.querySelector('.custom-select-options');
+            const valueDisplay = document.getElementById('aar-planet-value');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = !dropdown.classList.contains('hidden');
+
+                document.querySelectorAll('.custom-select-dropdown').forEach(dd => {
+                    if (dd !== dropdown) dd.classList.add('hidden');
+                });
+
+                dropdown.classList.toggle('hidden');
+                trigger.classList.toggle('ring-1', 'ring-primary-500');
+                arrow.classList.toggle('rotate-180');
+
+                if (!isOpen) {
+                    searchInput.value = '';
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('hidden'));
+                    searchInput.focus();
+                }
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    option.classList.toggle('hidden', !text.includes(searchTerm));
+                });
+            });
+
+            searchInput.addEventListener('click', (e) => e.stopPropagation());
+
+            optionsContainer.addEventListener('click', (e) => {
+                const option = e.target.closest('.custom-select-option');
+                if (!option) return;
+
+                const value = option.dataset.value;
+                valueDisplay.textContent = value;
+
+                dropdown.classList.add('hidden');
+                trigger.classList.remove('ring-1', 'ring-primary-500');
+                arrow.classList.remove('rotate-180');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                    trigger.classList.remove('ring-1', 'ring-primary-500');
+                    arrow.classList.remove('rotate-180');
+                }
+            });
+        }
+
+        // Generate AAR output
+        function generateAARPreview() {
+            let aar = 'SHIPS USED\n\n';
+
+            // Ships
+            const gunship = document.getElementById('aar-gunship-value').textContent;
+            const medical = document.getElementById('aar-medical-value').textContent;
+            const cap = document.getElementById('aar-cap-value').textContent;
+            const additionalShips = document.getElementById('aar-additional-ships').value;
+            const reason = document.getElementById('aar-reason').value;
+
+            aar += `Gunship: ${gunship !== 'Select ship...' ? gunship : ''}\n`;
+            aar += `Medical: ${medical !== 'Select ship...' ? medical : ''}\n`;
+            aar += `CAP: ${cap !== 'Select ship...' ? cap : ''}\n`;
+            aar += `Additional Ships: ${additionalShips}\n`;
+            aar += `Reason: ${reason}\n\n`;
+
+            // Intersystem Response
+            const intersystem = document.getElementById('aar-intersystem-toggle').checked;
+            if (intersystem) {
+                aar += 'INTERSYSTEM RESPONSE\n\n';
+            }
+
+            // Location
+            aar += 'LOCATION\n\n';
+            const planet = document.getElementById('aar-planet-value').textContent;
+            const locationType = document.getElementById('aar-location-type').value;
+            const poi = document.getElementById('aar-poi').value;
+
+            aar += `Planetary Body: ${planet !== 'Select planetary body...' ? planet : ''}\n`;
+            aar += `Location Type: ${locationType}\n`;
+            aar += `Specific POI: ${poi}\n\n`;
+
+            // Timestamps
+            aar += 'TIMESTAMPS\n\n';
+            const alert = document.getElementById('aar-alert').value;
+            const depart = document.getElementById('aar-depart').value;
+            const client = document.getElementById('aar-client').value;
+            const rtb = document.getElementById('aar-rtb').value;
+
+            aar += `Alert:${alert} | Depart:${depart} | Client:${client} | RTB:${rtb}\n\n`;
+
+            // Encounters
+            aar += 'ENCOUNTERS\n\n';
+            const pve = document.getElementById('aar-pve').value;
+            const pvp = document.getElementById('aar-pvp').value;
+            const actions = document.getElementById('aar-actions').value;
+
+            aar += `PVE: ${pve}\n`;
+            aar += `PVP: ${pvp}\n`;
+            aar += `Actions Taken: ${actions}\n\n`;
+
+            // Issues
+            aar += 'ISSUES\n\n';
+            const issueCheckboxes = document.querySelectorAll('.aar-issue-checkbox:checked');
+            const issues = Array.from(issueCheckboxes).map(cb => cb.value).join(', ');
+            const otherIssues = document.getElementById('aar-other-issues').value;
+            const fix = document.getElementById('aar-fix').value;
+
+            aar += `Problems: ${issues}${otherIssues ? (issues ? ', ' : '') + otherIssues : ''}\n`;
+            aar += `Brief Fix: ${fix}\n\n`;
+
+            // Summary
+            aar += 'SUMMARY\n\n';
+            const summary = document.getElementById('aar-summary').value;
+            aar += `${summary}\n\n`;
+
+            // Result
+            aar += 'RESULT\n\n';
+            const extractedTo = document.getElementById('aar-extracted-to').value;
+            const challenges = document.getElementById('aar-challenges').value;
+            const failure = document.getElementById('aar-failure').value;
+
+            aar += `Client Extracted To: ${extractedTo}\n`;
+            aar += `Challenges: ${challenges}\n`;
+            aar += `Failure/Abort Reason: ${failure}\n\n`;
+
+            // Notes
+            aar += 'NOTES:\n\n';
+            const notes = document.getElementById('aar-notes').value;
+            aar += notes;
+
+            // Update preview
+            document.getElementById('aar-preview').textContent = aar;
+        }
+
+        // Copy AAR to clipboard
+        function copyAARToClipboard() {
+            const output = document.getElementById('aar-preview').textContent;
+
+            if (!navigator.clipboard) {
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = output;
+                    textArea.style.position = 'fixed';
+                    textArea.style.top = '0';
+                    textArea.style.left = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showAARSuccessMessage();
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                    alert('Failed to copy to clipboard. Please try again.');
+                }
+                return;
+            }
+
+            navigator.clipboard.writeText(output).then(() => {
+                showAARSuccessMessage();
+            }).catch(err => {
+                alert('Failed to copy to clipboard. Please try again.');
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        function showAARSuccessMessage() {
+            const successMessage = document.getElementById('aar-successMessage');
+            successMessage.classList.remove('hidden');
+            setTimeout(() => {
+                successMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Clear AAR form
+        function clearAAR() {
+            // Reset all select values
+            document.getElementById('aar-gunship-value').textContent = 'Select ship...';
+            document.getElementById('aar-medical-value').textContent = 'Select ship...';
+            document.getElementById('aar-cap-value').textContent = 'Select ship...';
+            document.getElementById('aar-planet-value').textContent = 'Select planetary body...';
+
+            // Reset all inputs
+            document.getElementById('aar-additional-ships').value = '';
+            document.getElementById('aar-reason').value = '';
+            document.getElementById('aar-location-type').value = '';
+            document.getElementById('aar-poi').value = '';
+            document.getElementById('aar-alert').value = '00';
+            document.getElementById('aar-depart').value = '';
+            document.getElementById('aar-client').value = '';
+            document.getElementById('aar-rtb').value = '';
+            document.getElementById('aar-pve').value = '';
+            document.getElementById('aar-pvp').value = '';
+            document.getElementById('aar-actions').value = '';
+            document.getElementById('aar-other-issues').value = '';
+            document.getElementById('aar-fix').value = '';
+            document.getElementById('aar-summary').value = '';
+            document.getElementById('aar-extracted-to').value = '';
+            document.getElementById('aar-challenges').value = '';
+            document.getElementById('aar-failure').value = '';
+            document.getElementById('aar-notes').value = '';
+
+            // Uncheck all checkboxes
+            document.getElementById('aar-intersystem-toggle').checked = false;
+            document.querySelectorAll('.aar-issue-checkbox').forEach(cb => cb.checked = false);
+
+            // Reset preview
+            document.getElementById('aar-preview').textContent = 'Generate AAR to see preview...';
+        }
+
+        // Initialize planetary bodies on page load
+        initializePlanetaryBodies();
+    </script>
+</body>
+</html>
