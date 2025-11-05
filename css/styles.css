@@ -1,0 +1,25 @@
+/* Custom styles for Medrunner Operations Tool */
+
+.dragging {
+    opacity: 0.5;
+    background: #374151; /* bg-gray-700 */
+}
+
+/* Custom scrollbar for dropdowns */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #374151; /* bg-gray-700 */
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4b5563; /* bg-gray-600 */
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6b7280; /* bg-gray-500 */
+}

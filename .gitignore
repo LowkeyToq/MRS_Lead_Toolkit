@@ -1,0 +1,23 @@
+# Local documentation and references (not for upload)
+docs-local/
+
+# Backup files
+*.backup
+*_backup_*
+index_backup_*.html
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files (if you add any later)
+.env
+.env.local
