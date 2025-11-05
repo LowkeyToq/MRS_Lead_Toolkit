@@ -17,18 +17,10 @@
 // ============================================================================
 
 /**
- * Reference to the global ships array from ship assignments
- * This will be linked when the module is integrated
- * @type {Array}
+ * Note: The following variables are declared in other modules and shared globally:
+ * - ships (Array) - Declared in ship-assignment.js
+ * - SHIPS (Array) - Declared in constants.js
  */
-let ships = [];
-
-/**
- * List of all available ships in Star Citizen
- * This will be linked to the global SHIPS constant
- * @type {Array<string>}
- */
-let SHIPS = [];
 
 /**
  * Database containing all location information (systems, planets, moons, stations, etc.)

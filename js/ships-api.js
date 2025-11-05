@@ -4,28 +4,7 @@
  * and managing the ship list cache.
  */
 
-// Star Citizen flyable ships list - will be populated from API
-let SHIPS = [];
-
-// Fallback ship list in case API fails
-// Note: This will be imported from constants.js in the future
-const FALLBACK_SHIPS = [
-    'Aegis Avenger Titan',
-    'Aegis Gladius',
-    'Aegis Sabre',
-    'Aegis Vanguard Warden',
-    'Aegis Hammerhead',
-    'Aegis Redeemer',
-    'Anvil Arrow',
-    'Anvil Carrack',
-    'Anvil Paladin',
-    'Drake Cutlass Black',
-    'Drake Cutlass Red',
-    'MISC Freelancer',
-    'RSI Apollo Medivac',
-    'RSI Apollo Triage',
-    'RSI Constellation Andromeda'
-].sort();
+// Note: SHIPS and FALLBACK_SHIPS are declared in constants.js and shared globally
 
 /**
  * Fetch all pages from FleetYards API
