@@ -683,6 +683,9 @@ function initializeAARPOISelect() {
             }
         }
 
+        // Auto-select Location Type based on POI (Poptic's "big brain" feature)
+        autoSelectLocationType(value);
+
         newDropdown.classList.add('hidden');
         newTrigger.classList.remove('ring-1', 'ring-primary-500');
         newArrow.classList.remove('rotate-180');
@@ -695,6 +698,84 @@ function initializeAARPOISelect() {
             newArrow.classList.remove('rotate-180');
         }
     });
+}
+
+// ============================================================================
+// SMART AUTO-SELECT FUNCTIONS
+// ============================================================================
+
+/**
+ * Auto-selects the Location Type based on the selected POI name.
+ * This "big brain" feature analyzes the POI name and automatically selects
+ * the appropriate location type, improving user experience.
+ *
+ * @param {string} poiName - The name of the selected POI
+ */
+function autoSelectLocationType(poiName) {
+    if (!poiName || poiName === 'Other' || poiName === 'Select POI...') {
+        return; // Don't auto-select for these cases
+    }
+
+    const locationTypeSelect = document.getElementById('aar-location-type');
+    if (!locationTypeSelect) return;
+
+    const poi = poiName.toLowerCase();
+    let selectedType = '';
+
+    // Pattern matching for location types (based on consolidated list)
+    if (poi.includes('lorville') || poi.includes('area 18') || poi.includes('orison') || poi.includes('new babbage')) {
+        selectedType = 'Landing Zone / City';
+    } else if (poi.includes('bunker') || poi.includes('hdsf') || poi.includes('hdms')) {
+        selectedType = 'Bunker';
+    } else if (poi.includes('kareah') || poi.includes('spk')) {
+        selectedType = 'Security Post Kareah (SPK)';
+    } else if (poi.includes('security post') || poi.includes('security depot')) {
+        selectedType = 'Bunker';
+    } else if (poi.includes('mining facility') || poi.includes('shubin mining') || poi.includes('mining area') || poi.includes('arccorp mining') || poi.includes('tram & myers mining') || poi.includes('hdmo') || poi.includes('kudre ore')) {
+        selectedType = 'Mining Outpost';
+    } else if (poi.includes('cave') || poi.includes('caverns')) {
+        selectedType = 'Cave System';
+    } else if (poi.includes('commarray') || poi.includes('comm array') || poi.includes('communications array')) {
+        selectedType = 'Communications Array';
+    } else if (poi.includes('distribution') || poi.includes('covalex')) {
+        selectedType = 'Distribution Centre';
+    } else if (poi.includes('processing facility') || poi.includes('processing center') || poi.includes('processing plant')) {
+        selectedType = 'Mining Outpost';
+    } else if (poi.includes('asd facility') || poi.includes('asd ')) {
+        selectedType = 'ASD Facility';
+    } else if (poi.includes('olp') || poi.includes('paf') || poi.includes('orbital loading') || poi.includes('planetary approach')) {
+        selectedType = 'OLP / PAF';
+    } else if (poi.includes('contested') || poi.includes('jumptown')) {
+        selectedType = 'Contested Zone';
+    } else if (poi.includes('lagrange') || poi.includes('-l1') || poi.includes('-l2') || poi.includes('-l3') || poi.includes('-l4') || poi.includes('-l5')) {
+        selectedType = 'Space Station';
+    } else if (poi.includes('station') || poi.includes('harbor') || poi.includes('gateway') || poi.includes('port olisar') || poi.includes('port tressler') || poi.includes('grimhex') || poi.includes('seraphim') || poi.includes('baijini')) {
+        selectedType = 'Space Station';
+    } else if (poi.includes('aid shelter') || poi.includes('emergency shelter')) {
+        selectedType = 'Outpost';
+    } else if (poi.includes('farm') || poi.includes('hydroponics') || poi.includes('hydrofarm')) {
+        selectedType = 'Outpost';
+    } else if (poi.includes('research') || poi.includes('rayari') || poi.includes('hickes')) {
+        selectedType = 'Outpost';
+    } else if (poi.includes('data center') || poi.includes('datacenter') || poi.includes('mt datacenter')) {
+        selectedType = 'Outpost';
+    } else if (poi.includes('salvage') || poi.includes('scrap') || poi.includes("samson & sons")) {
+        selectedType = 'Outpost';
+    } else if (poi.includes('wreck') || poi.includes('derelict')) {
+        selectedType = 'Open Space';
+    } else if (poi.includes('klescher') || poi.includes('rehabilitation')) {
+        selectedType = 'Outpost';
+    } else if (poi.includes('settlement') || poi.includes('outpost') || poi.includes('depot') || poi.includes('claim')) {
+        selectedType = 'Outpost';
+    } else {
+        // Default to Outpost for unrecognized POIs
+        selectedType = 'Outpost';
+    }
+
+    // Set the selected value
+    if (selectedType) {
+        locationTypeSelect.value = selectedType;
+    }
 }
 
 // ============================================================================

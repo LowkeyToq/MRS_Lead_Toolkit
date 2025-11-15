@@ -903,8 +903,10 @@ function importFromDiscord() {
 
         showImportStatus('success', `Successfully imported ${parsedShips.length} ship(s) with ${parsedShips.reduce((sum, s) => sum + s.crew.length, 0)} crew member(s)!`);
 
-        // Clear the import textarea
-        document.getElementById('import-discord-message').value = '';
+        // Close modal after 2 seconds
+        setTimeout(() => {
+            closeImportModal();
+        }, 2000);
     } catch (error) {
         console.error('Import error:', error);
         showImportStatus('error', 'Failed to parse message: ' + error.message);

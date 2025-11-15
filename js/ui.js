@@ -68,5 +68,51 @@ function switchTab(tabName) {
     }
 }
 
+/**
+ * Opens the Import from Discord modal.
+ * Makes the modal visible by removing the 'hidden' class and replacing it with 'flex'.
+ * This allows users to import ship assignments from a Discord message.
+ *
+ * @example
+ * // Open the import modal
+ * openImportModal();
+ */
+function openImportModal() {
+    const modal = document.getElementById('import-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    // Clear any previous import status
+    const statusEl = document.getElementById('import-status');
+    if (statusEl) {
+        statusEl.classList.add('hidden');
+    }
+    // Focus on the textarea for better UX
+    setTimeout(() => {
+        document.getElementById('import-discord-message').focus();
+    }, 100);
+}
+
+/**
+ * Closes the Import from Discord modal.
+ * Hides the modal by removing 'flex' class and adding 'hidden' class.
+ * Also clears the textarea and status message.
+ *
+ * @example
+ * // Close the import modal
+ * closeImportModal();
+ */
+function closeImportModal() {
+    const modal = document.getElementById('import-modal');
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+    // Clear textarea
+    document.getElementById('import-discord-message').value = '';
+    // Clear status
+    const statusEl = document.getElementById('import-status');
+    if (statusEl) {
+        statusEl.classList.add('hidden');
+    }
+}
+
 // ES6 Module Export (if needed in the future)
-// export { switchTab };
+// export { switchTab, openImportModal, closeImportModal };

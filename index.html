@@ -72,25 +72,12 @@
         <!-- SHIP ASSIGNMENT TAB -->
         <div id="content-shipAssignment" class="tab-content">
 
-        <!-- Import from Discord Card -->
-        <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
-            <h2 class="mb-4 font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Import from Discord</h2>
-            <p class="mb-4 rounded-lg border border-blue-900 bg-blue-950/50 p-3 text-sm text-gray-300">
-                💡 <strong class="text-white">Paste a Discord ship assignment message</strong> below to automatically populate the ship assignments. This is useful for team lead hand-overs.
-            </p>
-            <textarea id="import-discord-message" rows="8" placeholder="Paste your Discord ship assignment message here..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 font-mono transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
-            <div class="mt-3 flex gap-3">
-                <button onclick="importFromDiscord()" class="flex-1 rounded-lg border border-mrs-button bg-mrs-button px-5 py-2.5 text-sm font-medium text-white shadow-md transition hover:border-mrs-button-hover hover:bg-mrs-button-hover">Import & Populate</button>
-                <button onclick="document.getElementById('import-discord-message').value = ''" class="rounded-lg border border-gray-600 bg-gray-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-600">Clear</button>
-            </div>
-            <div id="import-status" class="mt-3 hidden rounded-lg px-4 py-3 text-center font-medium"></div>
-        </div>
-
         <!-- Ship Groups Card -->
         <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
             <div class="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                 <h2 class="font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Ship Groups</h2>
-                <div class="flex w-full items-center gap-3 md:w-auto">
+                <div class="flex w-full flex-wrap items-center gap-3 md:w-auto">
+                    <button class="rounded-lg border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 hover:border-blue-700" onclick="openImportModal()">Import from Discord</button>
                     <span id="apiStatus" class="flex-1 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-xs font-medium text-gray-300 md:flex-auto">Loading ships...</span>
                     <button class="rounded-lg border border-mrs-button bg-mrs-button px-4 py-2 text-sm font-medium text-white transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="refreshShipList()">Refresh Ships</button>
                 </div>
@@ -221,33 +208,20 @@
                             <select id="aar-location-type" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
                                 <option value="">Select type...</option>
                                 <option value="Landing Zone / City">Landing Zone / City</option>
-                                <option value="Settlement">Settlement</option>
                                 <option value="Outpost">Outpost</option>
                                 <option value="Space Station">Space Station</option>
-                                <option value="Lagrange Station">Lagrange Station</option>
-                                <option value="Jump Point Station">Jump Point Station</option>
-                                <option value="Bunker (Corporate)">Bunker (Corporate)</option>
-                                <option value="Bunker (Outlaw)">Bunker (Outlaw)</option>
-                                <option value="Bunker (Abandoned)">Bunker (Abandoned)</option>
-                                <option value="Security Post">Security Post</option>
-                                <option value="Mining Facility">Mining Facility</option>
-                                <option value="Processing Facility">Processing Facility</option>
-                                <option value="Distribution Center">Distribution Center</option>
-                                <option value="Data Center">Data Center</option>
-                                <option value="Research Outpost">Research Outpost</option>
-                                <option value="Agricultural / Farm">Agricultural / Farm</option>
-                                <option value="Aid Shelter">Aid Shelter</option>
-                                <option value="Salvage Yard">Salvage Yard</option>
+                                <option value="Bunker">Bunker</option>
+                                <option value="Security Post Kareah (SPK)">Security Post Kareah (SPK)</option>
+                                <option value="Mining Outpost">Mining Outpost</option>
+                                <option value="Distribution Centre">Distribution Centre</option>
                                 <option value="Cave System">Cave System</option>
-                                <option value="Derelict / Wreck">Derelict / Wreck</option>
-                                <option value="Communication Array">Communication Array</option>
-                                <option value="Prison / Rehabilitation">Prison / Rehabilitation</option>
-                                <option value="Racetrack">Racetrack</option>
-                                <option value="Pickup">Pickup</option>
-                                <option value="Stranded">Stranded</option>
+                                <option value="Communications Array">Communications Array</option>
+                                <option value="ASD Facility">ASD Facility</option>
+                                <option value="OLP / PAF">OLP / PAF</option>
+                                <option value="Contested Zone">Contested Zone</option>
+                                <option value="Mining Base (space)">Mining Base (space)</option>
                                 <option value="Open Space">Open Space</option>
                                 <option value="Planet Surface">Planet Surface</option>
-                                <option value="PVP Zone">PVP Zone</option>
                                 <option value="Other">Other</option>
                             </select>
                             <input type="text" id="aar-location-type-other" placeholder="Specify location type..." class="mt-2 w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 hidden">
@@ -566,6 +540,29 @@
         <!-- END TIP SPLITTER TAB -->
     </div>
 
+    <!-- Import from Discord Modal -->
+    <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50 p-4">
+        <div class="relative w-full max-w-2xl rounded-lg border border-gray-700 bg-mrs-box p-6 shadow-2xl">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Import from Discord</h2>
+                <button onclick="closeImportModal()" class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-700 hover:text-white">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <p class="mb-4 rounded-lg border border-blue-900 bg-blue-950/50 p-3 text-sm text-gray-300">
+                💡 <strong class="text-white">Paste a Discord ship assignment message</strong> below to automatically populate the ship assignments. This is useful for team lead hand-overs.
+            </p>
+            <textarea id="import-discord-message" rows="10" placeholder="Paste your Discord ship assignment message here..." class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 font-mono transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
+            <div class="mt-4 flex gap-3">
+                <button onclick="importFromDiscord()" class="flex-1 rounded-lg border border-mrs-button bg-mrs-button px-5 py-2.5 text-sm font-medium text-white shadow-md transition hover:border-mrs-button-hover hover:bg-mrs-button-hover">Import & Populate</button>
+                <button onclick="document.getElementById('import-discord-message').value = ''" class="rounded-lg border border-gray-600 bg-gray-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-600">Clear</button>
+                <button onclick="closeImportModal()" class="rounded-lg border border-gray-600 bg-gray-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-600">Cancel</button>
+            </div>
+            <div id="import-status" class="mt-3 hidden rounded-lg px-4 py-3 text-center font-medium"></div>
+        </div>
+    </div>
 
     <!-- Application JavaScript Modules -->
     <script src="js/constants.js"></script>
