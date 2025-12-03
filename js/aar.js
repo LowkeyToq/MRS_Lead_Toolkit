@@ -66,12 +66,46 @@ const LOCATIONS_DATABASE_DATA = {
                         "Zephyr"
                     ],
                     pois: [
+                        "Broken Patch",
+                        "Covalex Distribution Centre S1DC06",
+                        "Cutter's Rig",
+                        "Downed Relay AC-652",
+                        "Dupree Industrial Manufacturing Facility",
+                        "Echo Isle",
+                        "Finn's Folly",
+                        "Greycat Stanton I Production Complex-B",
+                        "HDMO-Calthrope",
                         "HDMS-Edmond",
                         "HDMS-Hadley",
                         "HDMS-Oparei",
                         "HDMS-Pinewood",
                         "HDMS-Stanhope",
                         "HDMS-Thedus",
+                        "HDOF-Palomar",
+                        "HDPC-Cassillo",
+                        "HDPC-Farnesway",
+                        "HDRSO-Baier",
+                        "HDRSO-Bardie",
+                        "HDRSO-Bersch",
+                        "HDRSO-Bowes",
+                        "HDRSO-Brel",
+                        "HDRSO-Cronshaw",
+                        "HDRSO-Foster",
+                        "HDRSO-Franz",
+                        "HDRSO-Giblin",
+                        "HDRSO-Hosley",
+                        "HDRSO-Malloy",
+                        "HDRSO-Marling",
+                        "HDRSO-McKuen",
+                        "HDRSO-Newman",
+                        "HDRSO-Olliff",
+                        "HDRSO-Pearce",
+                        "HDRSO-Sheppard",
+                        "HDRSO-Simms",
+                        "HDRSO-Stott",
+                        "HDRSO-Tillman",
+                        "HDRSO-Walker",
+                        "HDRSO-Wyatt",
                         "HDSF-Adlai",
                         "HDSF-Barnabas",
                         "HDSF-Breckinridge",
@@ -88,14 +122,18 @@ const LOCATIONS_DATABASE_DATA = {
                         "HDSF-Tamar",
                         "HDSF-Tompkins",
                         "HDSF-Zacharias",
-                        "Reclamation & Disposal Orinth",
-                        "HDMO-Calthrope",
-                        "Downed Relay AC-652",
-                        "Rico's Remains",
+                        "Lorville Outskirts",
                         "Lowdown",
+                        "Ludlow",
+                        "Maker's Point",
+                        "Picker's Field",
+                        "Rappel",
+                        "Reclamation & Disposal Orinth",
+                        "Rico's Remains",
+                        "Sakura Sun Magnolia Workcenter",
                         "Trilo",
-                        "Broken Patch",
-                        "Echo Island"
+                        "Weeping Cove",
+                        "Zephyr"
                     ],
                     stations: ["Everus Harbor"],
                     lagrangeStations: [
@@ -128,7 +166,11 @@ const LOCATIONS_DATABASE_DATA = {
                                 "Klescher Rehabilitation Facility",
                                 "Barton Flats Aid Shelter",
                                 "HDMO-Dobbs",
-                                "CommArray ST1-92"
+                                "CommArray ST1-92",
+                                "The Grove",
+                                "Boondoggle",
+                                "Rupture OLP",
+                                "Vivere OLP"
                             ]
                         },
                         MAGDA: { name: "Magda", designation: "Stanton 1c", pois: ["HDMS-Hahn", "HDMS-Perlman", "CommArray ST1-48"] },
@@ -497,6 +539,20 @@ const LOCATIONS_DATABASE_DATA = {
                     ],
                     stations: ["Ruin Station"],
                     lagrangeStations: ["PYAM-FARSTAT-6-2 (L2)", "Endgame (L3)", "Dudley & Daughters (L4)", "Megumi Refueling (L5)"]
+                }
+            }
+        },
+        NYX: {
+            name: "Nyx",
+            jumpPointStations: ["Stanton Gateway", "Pyro Gateway", "Castra Gateway"],
+            planets: {
+                GLACIANBELT: {
+                    name: "Glacian Belt",
+                    designation: "Belt",
+                    type: "belt",
+                    pois: [],
+                    stations: ["Levski"],
+                    lagrangeStations: ["QV Sites"]
                 }
             }
         }
