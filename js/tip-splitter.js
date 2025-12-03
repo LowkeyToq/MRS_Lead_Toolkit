@@ -39,9 +39,9 @@ const TRANSFER_FEE_RATE = 0.005;
  * @constant {Object}
  */
 const RECIPIENT_CHOICES = {
-    KEEP: 'keep',           // Recipient wants to keep their tip
-    DECLINE: 'decline',     // Recipient doesn't want the tip (redistributed)
-    LOGISTICS: 'logistics'  // Recipient donates their share to logistics pool
+    KEEP: "keep", // Recipient wants to keep their tip
+    DECLINE: "decline", // Recipient doesn't want the tip (redistributed)
+    LOGISTICS: "logistics" // Recipient donates their share to logistics pool
 };
 
 /**
@@ -49,9 +49,9 @@ const RECIPIENT_CHOICES = {
  * @constant {Object}
  */
 const LEAD_CHOICES = {
-    KEEP: 'lead-keep',         // Lead keeps their share
-    DECLINE: 'lead-decline',   // Lead doesn't want tip (redistributed)
-    LOGISTICS: 'lead-logistics' // Lead donates their share to logistics
+    KEEP: "lead-keep", // Lead keeps their share
+    DECLINE: "lead-decline", // Lead doesn't want tip (redistributed)
+    LOGISTICS: "lead-logistics" // Lead donates their share to logistics
 };
 
 // ===== RECIPIENT MANAGEMENT FUNCTIONS =====
@@ -66,11 +66,11 @@ function importCrewForTip() {
     const totalCrew = ships.reduce((sum, ship) => sum + ship.crew.length, 0);
 
     if (totalCrew === 0) {
-        alert('No crew members found in ship assignments. Please add crew first or enter a number manually.');
+        alert("No crew members found in ship assignments. Please add crew first or enter a number manually.");
         return;
     }
 
-    document.getElementById('tip-recipients').value = totalCrew;
+    document.getElementById("tip-recipients").value = totalCrew;
     generateRecipientsList(totalCrew);
 }
 
@@ -81,7 +81,7 @@ function importCrewForTip() {
  * @param {number} count - Number of recipients to generate
  */
 function generateRecipientsList(count) {
-    const container = document.getElementById('tip-recipients-list');
+    const container = document.getElementById("tip-recipients-list");
 
     if (!count || count < 1) {
         container.innerHTML = '<div class="px-3 py-2 text-sm text-gray-400">Add crew members by entering a number above or importing from ship assignments.</div>';
@@ -90,7 +90,7 @@ function generateRecipientsList(count) {
     }
 
     tipRecipients = [];
-    let html = '';
+    let html = "";
 
     for (let i = 1; i <= count; i++) {
         tipRecipients.push({
@@ -282,20 +282,20 @@ function findEqualTakeHomeAmount(totalActivePool, totalActiveShares, numKeeperTr
  * - Logistics donations: Pooled into single transfer to minimize fees
  */
 function calculateTipSplit() {
-    const totalTip = Math.floor(parseFloat(document.getElementById('tip-total').value)) || 0;
+    const totalTip = Math.floor(parseFloat(document.getElementById("tip-total").value)) || 0;
 
     // --- 0. VALIDATION ---
     if (totalTip <= 0) {
-        alert('Please enter a valid tip amount.');
+        alert("Please enter a valid tip amount.");
         return;
     }
 
     if (tipRecipients.length === 0) {
-        alert('Please add recipients first.');
+        alert("Please add recipients first.");
         return;
     }
 
-    const leadChoice = document.getElementById('tip-lead-choice').value;
+    const leadChoice = document.getElementById("tip-lead-choice").value;
     const totalPartySize = tipRecipients.length + 1; // Always include lead in party size
 
     // --- 1. CATEGORIZE ALL PARTICIPANTS ---
@@ -303,9 +303,9 @@ function calculateTipSplit() {
     const donatingRecipients = tipRecipients.filter(r => r.choice === RECIPIENT_CHOICES.LOGISTICS);
     const decliningRecipients = tipRecipients.filter(r => r.choice === RECIPIENT_CHOICES.DECLINE);
 
-    const leadIsKeeping = (leadChoice === LEAD_CHOICES.KEEP);
-    const leadIsDonating = (leadChoice === LEAD_CHOICES.LOGISTICS);
-    const leadIsDeclining = (leadChoice === LEAD_CHOICES.DECLINE);
+    const leadIsKeeping = leadChoice === LEAD_CHOICES.KEEP;
+    const leadIsDonating = leadChoice === LEAD_CHOICES.LOGISTICS;
+    const leadIsDeclining = leadChoice === LEAD_CHOICES.DECLINE;
 
     // --- 2. CALCULATE "ACTIVE" POOL AND SHARES ---
     // "Active" means anyone NOT declining.
@@ -333,7 +333,7 @@ function calculateTipSplit() {
 
     // 2f. Find how many transfers are needed
     const numKeeperTransfers = keepingRecipients.length; // Only recipients (not lead)
-    const numLogisticsTransfers = (numActiveDonators > 0) ? 1 : 0; // Only one transfer
+    const numLogisticsTransfers = numActiveDonators > 0 ? 1 : 0; // Only one transfer
 
     // --- 3. Find the "Equal Take-Home Amount" (X) ---
     // This is the core logic. Find the highest amount X that can be
@@ -363,7 +363,7 @@ function calculateTipSplit() {
             fee: fee,
             receivedAmount: transferAmount,
             youPay: youPay,
-            type: 'crew'
+            type: "crew"
         });
         totalCostOfTransfers += youPay;
         totalFeesAmount += fee;
@@ -414,7 +414,7 @@ function calculateTipSplit() {
         logisticsTransfer,
         totalTip,
         totalPartySize, // Pass original party size
-        oldBaseShare,   // Pass original base share
+        oldBaseShare, // Pass original base share
         totalFeesAmount,
         totalCostOfTransfers, // This is just the transfers, not lead keep
         leadFinalKept, // This is what's left
@@ -443,11 +443,11 @@ function calculateTipSplit() {
  * @param {string} leadChoice - The lead's choice ('lead-keep', 'lead-decline', 'lead-logistics')
  */
 function displayTipResults(transfers, logisticsTransfer, totalTip, totalCrewCount, baseShare, totalFees, totalTransferred, leadKeeps, donatingToLogistics, declining, leadChoice) {
-    const resultsContainer = document.getElementById('tip-results-list');
-    const logisticsContainer = document.getElementById('tip-logistics-transfer');
-    const resultsSection = document.getElementById('tip-results');
+    const resultsContainer = document.getElementById("tip-results-list");
+    const logisticsContainer = document.getElementById("tip-logistics-transfer");
+    const resultsSection = document.getElementById("tip-results");
 
-    let html = '';
+    let html = "";
 
     // Display crew transfers
     transfers.forEach((transfer, index) => {
@@ -477,29 +477,29 @@ function displayTipResults(transfers, logisticsTransfer, totalTip, totalCrewCoun
         }
 
         const donorCount = donorNames.length;
-        const shareText = donorCount === 1 ? '1 share' : `${donorCount} shares`;
+        const shareText = donorCount === 1 ? "1 share" : `${donorCount} shares`;
 
         logisticsContainer.innerHTML = `
             <div class="grid grid-cols-3 gap-4 py-2 text-sm">
                 <div class="text-yellow-300 font-semibold">
                     Logistics Pool (${shareText})
-                    <div class="text-xs text-yellow-400 font-normal mt-1">From: ${donorNames.join(', ')}</div>
+                    <div class="text-xs text-yellow-400 font-normal mt-1">From: ${donorNames.join(", ")}</div>
                 </div>
                 <div class="text-right font-mono text-white">${Math.round(logisticsTransfer.transferAmount).toLocaleString()} aUEC</div>
                 <div class="text-right font-mono text-yellow-300">${Math.round(logisticsTransfer.receivedAmount).toLocaleString()} aUEC</div>
             </div>
         `;
-        logisticsContainer.classList.remove('hidden');
-        document.getElementById('tip-summary-logistics-section').classList.remove('hidden');
-        document.getElementById('tip-summary-logistics').textContent = Math.round(logisticsTransfer.receivedAmount).toLocaleString() + ' aUEC';
+        logisticsContainer.classList.remove("hidden");
+        document.getElementById("tip-summary-logistics-section").classList.remove("hidden");
+        document.getElementById("tip-summary-logistics").textContent = Math.round(logisticsTransfer.receivedAmount).toLocaleString() + " aUEC";
     } else {
-        logisticsContainer.classList.add('hidden');
-        document.getElementById('tip-summary-logistics-section').classList.add('hidden');
+        logisticsContainer.classList.add("hidden");
+        document.getElementById("tip-summary-logistics-section").classList.add("hidden");
     }
 
     // Display note about declined tips if any
     // Find any existing "note" and remove it before adding a new one
-    const existingNote = resultsContainer.querySelector('.note');
+    const existingNote = resultsContainer.querySelector(".note");
     if (existingNote) {
         existingNote.remove();
     }
@@ -509,22 +509,22 @@ function displayTipResults(transfers, logisticsTransfer, totalTip, totalCrewCoun
         if (leadChoice === LEAD_CHOICES.DECLINE) {
             declinedNames.unshift("You (Lead)");
         }
-        const note = document.createElement('div');
-        note.className = 'mt-3 rounded-lg border border-gray-600 bg-gray-800/50 p-3 text-sm text-gray-400';
-        note.innerHTML = `<strong>Declined Tips (redistributed):</strong> ${declinedNames.join(', ')}`;
+        const note = document.createElement("div");
+        note.className = "mt-3 rounded-lg border border-gray-600 bg-gray-800/50 p-3 text-sm text-gray-400";
+        note.innerHTML = `<strong>Declined Tips (redistributed):</strong> ${declinedNames.join(", ")}`;
         resultsContainer.appendChild(note);
     }
 
     // Update summary
-    document.getElementById('tip-summary-total').textContent = totalTip.toLocaleString() + ' aUEC';
-    document.getElementById('tip-summary-crew-count').textContent = totalCrewCount;
-    document.getElementById('tip-summary-share').textContent = Math.round(baseShare).toLocaleString() + ' aUEC';
-    document.getElementById('tip-summary-fees').textContent = Math.round(totalFees).toLocaleString() + ' aUEC';
-    document.getElementById('tip-summary-transfer').textContent = Math.round(totalTransferred).toLocaleString() + ' aUEC';
-    document.getElementById('tip-summary-keep').textContent = Math.round(leadKeeps).toLocaleString() + ' aUEC';
+    document.getElementById("tip-summary-total").textContent = totalTip.toLocaleString() + " aUEC";
+    document.getElementById("tip-summary-crew-count").textContent = totalCrewCount;
+    document.getElementById("tip-summary-share").textContent = Math.round(baseShare).toLocaleString() + " aUEC";
+    document.getElementById("tip-summary-fees").textContent = Math.round(totalFees).toLocaleString() + " aUEC";
+    document.getElementById("tip-summary-transfer").textContent = Math.round(totalTransferred).toLocaleString() + " aUEC";
+    document.getElementById("tip-summary-keep").textContent = Math.round(leadKeeps).toLocaleString() + " aUEC";
 
     // Show results section
-    resultsSection.classList.remove('hidden');
+    resultsSection.classList.remove("hidden");
 }
 
 // ===== EVENT LISTENERS =====
@@ -535,9 +535,9 @@ function displayTipResults(transfers, logisticsTransfer, totalTip, totalCrewCoun
  */
 function initializeTipSplitterListeners() {
     // Watch for changes to recipient count
-    const recipientsInput = document.getElementById('tip-recipients');
+    const recipientsInput = document.getElementById("tip-recipients");
     if (recipientsInput) {
-        recipientsInput.addEventListener('input', (e) => {
+        recipientsInput.addEventListener("input", e => {
             const count = parseInt(e.target.value) || 0;
             generateRecipientsList(count);
         });
@@ -545,7 +545,7 @@ function initializeTipSplitterListeners() {
 }
 
 // Auto-initialize on DOM load
-document.addEventListener('DOMContentLoaded', initializeTipSplitterListeners);
+document.addEventListener("DOMContentLoaded", initializeTipSplitterListeners);
 
 // ===== MODULE EXPORTS (for ES6 modules if needed) =====
 

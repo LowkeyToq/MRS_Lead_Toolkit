@@ -22,11 +22,11 @@ async function fetchAllFleetYardsPages() {
             console.log(`Fetching FleetYards page ${page}...`);
 
             const response = await fetch(url, {
-                method: 'GET',
+                method: "GET",
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: "application/json"
                 },
-                mode: 'cors',
+                mode: "cors"
             });
 
             if (!response.ok) {
@@ -53,7 +53,7 @@ async function fetchAllFleetYardsPages() {
 
         return allShips;
     } catch (error) {
-        console.error('Error fetching FleetYards data:', error);
+        console.error("Error fetching FleetYards data:", error);
         return null;
     }
 }
@@ -64,20 +64,20 @@ async function fetchAllFleetYardsPages() {
  */
 const API_SOURCES = [
     {
-        name: 'FleetYards',
+        name: "FleetYards",
         fetchData: fetchAllFleetYardsPages,
-        parse: (data) => {
+        parse: data => {
             // Parse the response and extract ship names
             if (Array.isArray(data)) {
                 return data
                     .filter(ship => {
                         // Filter for flight-ready ships only
-                        const status = ship.productionStatus?.toLowerCase() || '';
-                        return status === 'flight-ready' || status === 'in-service';
+                        const status = ship.productionStatus?.toLowerCase() || "";
+                        return status === "flight-ready" || status === "in-service";
                     })
                     .map(ship => {
-                        const manufacturer = ship.manufacturer?.name || ship.manufacturer?.code || '';
-                        const name = ship.name || '';
+                        const manufacturer = ship.manufacturer?.name || ship.manufacturer?.code || "";
+                        const name = ship.name || "";
                         return manufacturer ? `${manufacturer} ${name}` : name;
                     })
                     .filter(name => name.trim().length > 0);
@@ -86,15 +86,15 @@ const API_SOURCES = [
         }
     },
     {
-        name: 'FleetYards (All Ships)',
+        name: "FleetYards (All Ships)",
         fetchData: fetchAllFleetYardsPages,
-        parse: (data) => {
+        parse: data => {
             // Fallback: get ALL ships if flight-ready filter returns too few
             if (Array.isArray(data)) {
                 return data
                     .map(ship => {
-                        const manufacturer = ship.manufacturer?.name || ship.manufacturer?.code || '';
-                        const name = ship.name || '';
+                        const manufacturer = ship.manufacturer?.name || ship.manufacturer?.code || "";
+                        const name = ship.name || "";
                         return manufacturer ? `${manufacturer} ${name}` : name;
                     })
                     .filter(name => name.trim().length > 0);
@@ -112,13 +112,14 @@ const API_SOURCES = [
  */
 async function fetchShipsFromAPI() {
     // Check cache first (24 hour expiry)
-    const cached = localStorage.getItem('scShipsCache');
-    const cacheTime = localStorage.getItem('scShipsCacheTime');
+    const cached = localStorage.getItem("scShipsCache");
+    const cacheTime = localStorage.getItem("scShipsCacheTime");
 
     if (cached && cacheTime) {
         const age = Date.now() - parseInt(cacheTime);
-        if (age < 24 * 60 * 60 * 1000) { // 24 hours
-            console.log('Using cached ship list');
+        if (age < 24 * 60 * 60 * 1000) {
+            // 24 hours
+            console.log("Using cached ship list");
             return JSON.parse(cached);
         }
     }
@@ -139,9 +140,9 @@ async function fetchShipsFromAPI() {
                     console.log(`✅ Successfully fetched ${sortedShips.length} ships from ${source.name}`);
 
                     // Cache the results
-                    localStorage.setItem('scShipsCache', JSON.stringify(sortedShips));
-                    localStorage.setItem('scShipsCacheTime', Date.now().toString());
-                    localStorage.setItem('scShipsSource', source.name);
+                    localStorage.setItem("scShipsCache", JSON.stringify(sortedShips));
+                    localStorage.setItem("scShipsCacheTime", Date.now().toString());
+                    localStorage.setItem("scShipsSource", source.name);
 
                     return sortedShips;
                 } else {
@@ -156,7 +157,7 @@ async function fetchShipsFromAPI() {
     }
 
     // All APIs failed, use fallback
-    console.warn('All APIs failed, using fallback ship list');
+    console.warn("All APIs failed, using fallback ship list");
     return FALLBACK_SHIPS;
 }
 
@@ -166,23 +167,24 @@ async function fetchShipsFromAPI() {
  * @param {string} message - Status message to display
  * @param {string} source - Optional source name (e.g., 'FleetYards')
  */
-function updateAPIStatus(status, message, source = '') {
-    const statusEl = document.getElementById('apiStatus');
+function updateAPIStatus(status, message, source = "") {
+    const statusEl = document.getElementById("apiStatus");
     if (!statusEl) return;
 
     // Reset classes
-    statusEl.className = 'rounded-lg border px-3 py-2 text-xs font-medium flex-1 md:flex-auto';
+    statusEl.className = "rounded-lg border px-3 py-2 text-xs font-medium flex-1 md:flex-auto";
 
     // Add appropriate color classes based on status
-    if (status === 'success') {
-        statusEl.classList.add('border-gray-600', 'bg-gray-700', 'text-gray-300');
-    } else if (status === 'error') {
-        statusEl.classList.add('border-red-600', 'bg-red-900', 'text-red-200');
-    } else { // loading
-        statusEl.classList.add('border-gray-600', 'bg-gray-700', 'text-gray-300', 'animate-pulse');
+    if (status === "success") {
+        statusEl.classList.add("border-gray-600", "bg-gray-700", "text-gray-300");
+    } else if (status === "error") {
+        statusEl.classList.add("border-red-600", "bg-red-900", "text-red-200");
+    } else {
+        // loading
+        statusEl.classList.add("border-gray-600", "bg-gray-700", "text-gray-300", "animate-pulse");
     }
 
-    statusEl.textContent = message + (source ? ` (${source})` : '');
+    statusEl.textContent = message + (source ? ` (${source})` : "");
 }
 
 /**
@@ -190,28 +192,28 @@ function updateAPIStatus(status, message, source = '') {
  * Fetches ship data from API and updates status indicator
  */
 async function initializeShips() {
-    updateAPIStatus('loading', 'Loading ships...');
+    updateAPIStatus("loading", "Loading ships...");
     SHIPS = await fetchShipsFromAPI();
     console.log(`Loaded ${SHIPS.length} ships`);
 
     // Determine which source was used
-    const source = localStorage.getItem('scShipsSource') || 'unknown';
-    const cached = localStorage.getItem('scShipsCache');
-    const cacheTime = localStorage.getItem('scShipsCacheTime');
+    const source = localStorage.getItem("scShipsSource") || "unknown";
+    const cached = localStorage.getItem("scShipsCache");
+    const cacheTime = localStorage.getItem("scShipsCacheTime");
 
     if (cached && cacheTime) {
         const age = Date.now() - parseInt(cacheTime);
         if (age < 24 * 60 * 60 * 1000 && JSON.parse(cached).length === SHIPS.length) {
             const hours = Math.floor(age / (60 * 60 * 1000));
-            updateAPIStatus('success', `${SHIPS.length} ships`, `cached ${hours}h ago from ${source}`);
+            updateAPIStatus("success", `${SHIPS.length} ships`, `cached ${hours}h ago from ${source}`);
             return;
         }
     }
 
     if (SHIPS.length === FALLBACK_SHIPS.length) {
-        updateAPIStatus('error', `${SHIPS.length} ships`, 'fallback - API unavailable');
+        updateAPIStatus("error", `${SHIPS.length} ships`, "fallback - API unavailable");
     } else {
-        updateAPIStatus('success', `${SHIPS.length} ships`, source);
+        updateAPIStatus("success", `${SHIPS.length} ships`, source);
     }
 }
 
@@ -221,27 +223,27 @@ async function initializeShips() {
  * Re-renders existing ships to update dropdowns
  */
 async function refreshShipList() {
-    updateAPIStatus('loading', 'Refreshing ships...');
+    updateAPIStatus("loading", "Refreshing ships...");
 
     // Clear cache
-    localStorage.removeItem('scShipsCache');
-    localStorage.removeItem('scShipsCacheTime');
-    localStorage.removeItem('scShipsSource');
+    localStorage.removeItem("scShipsCache");
+    localStorage.removeItem("scShipsCacheTime");
+    localStorage.removeItem("scShipsSource");
 
     // Fetch fresh data
     SHIPS = await fetchShipsFromAPI();
 
-    const source = localStorage.getItem('scShipsSource') || 'unknown';
+    const source = localStorage.getItem("scShipsSource") || "unknown";
 
     if (SHIPS.length === FALLBACK_SHIPS.length) {
-        updateAPIStatus('error', `${SHIPS.length} ships`, 'fallback - API unavailable');
+        updateAPIStatus("error", `${SHIPS.length} ships`, "fallback - API unavailable");
     } else {
-        updateAPIStatus('success', `${SHIPS.length} ships refreshed`, source);
+        updateAPIStatus("success", `${SHIPS.length} ships refreshed`, source);
     }
 
     // Re-render any existing ships to update dropdowns
     // Note: renderShips() is defined in the main app
-    if (typeof renderShips === 'function') {
+    if (typeof renderShips === "function") {
         renderShips();
     }
 }

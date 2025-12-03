@@ -39,26 +39,26 @@
  */
 function switchTab(tabName) {
     // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
+    document.querySelectorAll(".tab-content").forEach(content => {
+        content.classList.add("hidden");
     });
 
     // Remove active state from all tabs
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active', 'border-mrs-button', 'text-white');
-        button.classList.add('border-transparent', 'text-gray-400');
+    document.querySelectorAll(".tab-button").forEach(button => {
+        button.classList.remove("active", "border-mrs-button", "text-white");
+        button.classList.add("border-transparent", "text-gray-400");
     });
 
     // Show selected tab content
-    document.getElementById('content-' + tabName).classList.remove('hidden');
+    document.getElementById("content-" + tabName).classList.remove("hidden");
 
     // Add active state to selected tab
-    const activeTab = document.getElementById('tab-' + tabName);
-    activeTab.classList.add('active', 'border-mrs-button', 'text-white');
-    activeTab.classList.remove('border-transparent', 'text-gray-400');
+    const activeTab = document.getElementById("tab-" + tabName);
+    activeTab.classList.add("active", "border-mrs-button", "text-white");
+    activeTab.classList.remove("border-transparent", "text-gray-400");
 
     // If switching to AAR tab, populate ship dropdowns and re-initialize location dropdowns
-    if (tabName === 'aar') {
+    if (tabName === "aar") {
         populateAARShipDropdowns();
         // Re-initialize planet and POI dropdowns to ensure event listeners are attached
         if (PLANETARY_BODIES.length > 0) {

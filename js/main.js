@@ -6,8 +6,8 @@
 /**
  * Initialize the application when DOM is loaded
  */
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Medrunner Operations Tool - Initializing...');
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Medrunner Operations Tool - Initializing...");
 
     // Initialize Ships API - fetch ship list from API
     initializeShips();
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up tip splitter recipient count listener
     setupTipSplitterListeners();
 
-    console.log('Medrunner Operations Tool - Ready!');
+    console.log("Medrunner Operations Tool - Ready!");
 });
 
 /**
@@ -30,46 +30,46 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function setupAARConditionalFields() {
     // Show/hide Location Type "Other" free-form input
-    const locationTypeSelect = document.getElementById('aar-location-type');
-    const locationTypeOther = document.getElementById('aar-location-type-other');
+    const locationTypeSelect = document.getElementById("aar-location-type");
+    const locationTypeOther = document.getElementById("aar-location-type-other");
     if (locationTypeSelect && locationTypeOther) {
-        locationTypeSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'Other') {
-                locationTypeOther.classList.remove('hidden');
+        locationTypeSelect.addEventListener("change", e => {
+            if (e.target.value === "Other") {
+                locationTypeOther.classList.remove("hidden");
             } else {
-                locationTypeOther.classList.add('hidden');
-                locationTypeOther.value = '';
+                locationTypeOther.classList.add("hidden");
+                locationTypeOther.value = "";
             }
         });
     }
 
     // Show/hide Challenges "Other" free-form input
-    const challengesSelect = document.getElementById('aar-challenges');
-    const challengesOther = document.getElementById('aar-challenges-other');
+    const challengesSelect = document.getElementById("aar-challenges");
+    const challengesOther = document.getElementById("aar-challenges-other");
     if (challengesSelect && challengesOther) {
-        challengesSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'Other') {
-                challengesOther.classList.remove('hidden');
+        challengesSelect.addEventListener("change", e => {
+            if (e.target.value === "Other") {
+                challengesOther.classList.remove("hidden");
             } else {
-                challengesOther.classList.add('hidden');
-                challengesOther.value = '';
+                challengesOther.classList.add("hidden");
+                challengesOther.value = "";
             }
         });
     }
 
     // Show/hide "Client Extracted To" based on mission outcome
-    const outcomeSelect = document.getElementById('aar-outcome');
-    const extractedContainer = document.getElementById('aar-extracted-container');
+    const outcomeSelect = document.getElementById("aar-outcome");
+    const extractedContainer = document.getElementById("aar-extracted-container");
     if (outcomeSelect && extractedContainer) {
-        outcomeSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'Success') {
-                extractedContainer.classList.remove('hidden');
+        outcomeSelect.addEventListener("change", e => {
+            if (e.target.value === "Success") {
+                extractedContainer.classList.remove("hidden");
             } else {
-                extractedContainer.classList.add('hidden');
+                extractedContainer.classList.add("hidden");
                 // Reset extracted fields when hidden
-                document.getElementById('aar-extracted-value').textContent = 'Select...';
-                document.getElementById('aar-extracted-other').value = '';
-                document.getElementById('aar-extracted-other').classList.add('hidden');
+                document.getElementById("aar-extracted-value").textContent = "Select...";
+                document.getElementById("aar-extracted-other").value = "";
+                document.getElementById("aar-extracted-other").classList.add("hidden");
             }
         });
     }
@@ -80,9 +80,9 @@ function setupAARConditionalFields() {
  * Handles recipient count input changes
  */
 function setupTipSplitterListeners() {
-    const recipientsInput = document.getElementById('tip-recipients');
+    const recipientsInput = document.getElementById("tip-recipients");
     if (recipientsInput) {
-        recipientsInput.addEventListener('input', (e) => {
+        recipientsInput.addEventListener("input", e => {
             const count = parseInt(e.target.value) || 0;
             generateRecipientsList(count);
         });

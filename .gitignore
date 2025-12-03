@@ -17,6 +17,7 @@ desktop.ini
 *.swp
 *.swo
 *~
+.prettierrc
 
 # Environment files (if you add any later)
 .env

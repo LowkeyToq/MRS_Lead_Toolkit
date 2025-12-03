@@ -87,21 +87,21 @@ function addShip() {
     const shipId = shipIdCounter++;
 
     // Determine ship type based on existing ships
-    let shipType = 'Gunship'; // Default first ship
+    let shipType = "Gunship"; // Default first ship
 
-    const hasGunship = ships.some(s => s.type === 'Gunship');
-    const hasMedship = ships.some(s => s.type === 'Medship');
+    const hasGunship = ships.some(s => s.type === "Gunship");
+    const hasMedship = ships.some(s => s.type === "Medship");
 
     if (hasGunship && !hasMedship) {
-        shipType = 'Medship';
+        shipType = "Medship";
     } else if (hasGunship && hasMedship) {
-        shipType = 'CAP';
+        shipType = "CAP";
     }
 
     ships.push({
         id: shipId,
         type: shipType,
-        ship: '',
+        ship: "",
         crew: []
     });
     renderShips();
@@ -171,48 +171,48 @@ function updateShipName(shipId, name) {
 function addCrewMember(shipId) {
     const ship = ships.find(s => s.id === shipId);
     if (ship) {
-        let newRole = 'PIL'; // Default role
+        let newRole = "PIL"; // Default role
         const crewCount = ship.crew.length;
 
         if (crewCount === 0) {
             // First crew member logic
             switch (ship.type) {
-                case 'Gunship':
-                    newRole = 'PIL';
+                case "Gunship":
+                    newRole = "PIL";
                     break;
-                case 'Medship':
-                    newRole = 'MED';
+                case "Medship":
+                    newRole = "MED";
                     break;
-                case 'CAP':
-                    newRole = 'CAP';
+                case "CAP":
+                    newRole = "CAP";
                     break;
                 default:
-                    newRole = 'PIL'; // Default to Pilot if type is unknown
+                    newRole = "PIL"; // Default to Pilot if type is unknown
             }
         } else {
             // Subsequent crew member logic
             switch (ship.type) {
-                case 'Gunship':
-                    const hasLead = ship.crew.some(c => c.role === 'LEAD');
+                case "Gunship":
+                    const hasLead = ship.crew.some(c => c.role === "LEAD");
                     if (!hasLead) {
-                        newRole = 'LEAD';
+                        newRole = "LEAD";
                     } else {
-                        const hasMed = ship.crew.some(c => c.role === 'MED');
+                        const hasMed = ship.crew.some(c => c.role === "MED");
                         if (!hasMed) {
-                            newRole = 'MED';
+                            newRole = "MED";
                         } else {
-                            newRole = 'SEC';
+                            newRole = "SEC";
                         }
                     }
                     break;
-                case 'Medship':
-                    newRole = 'SEC';
+                case "Medship":
+                    newRole = "SEC";
                     break;
-                case 'CAP':
-                    newRole = 'SEC'; // Default subsequent CAP to Security
+                case "CAP":
+                    newRole = "SEC"; // Default subsequent CAP to Security
                     break;
                 default:
-                    newRole = 'SEC'; // Default all other subsequent to Security
+                    newRole = "SEC"; // Default all other subsequent to Security
             }
         }
 
@@ -241,9 +241,9 @@ function addCrewMember(shipId) {
             id: Date.now(),
             role: newRole, // Use the determined role
             position: newPosition, // Use the new smart-increment logic
-            name: '',
-            discordId: '',
-            comment: '' // Add new comment field
+            name: "",
+            discordId: "",
+            comment: "" // Add new comment field
         });
         renderShips();
         updatePreview();
@@ -406,69 +406,69 @@ function initializeCustomSelect(selectId, shipId) {
     const wrapper = document.getElementById(selectId);
     if (!wrapper) return;
 
-    const trigger = wrapper.querySelector('.custom-select-trigger');
-    const arrow = wrapper.querySelector('.custom-select-arrow');
-    const dropdown = wrapper.querySelector('.custom-select-dropdown');
-    const searchInput = wrapper.querySelector('.ship-search-input');
-    const optionsContainer = wrapper.querySelector('.custom-select-options');
-    const valueDisplay = wrapper.querySelector('.custom-select-value');
+    const trigger = wrapper.querySelector(".custom-select-trigger");
+    const arrow = wrapper.querySelector(".custom-select-arrow");
+    const dropdown = wrapper.querySelector(".custom-select-dropdown");
+    const searchInput = wrapper.querySelector(".ship-search-input");
+    const optionsContainer = wrapper.querySelector(".custom-select-options");
+    const valueDisplay = wrapper.querySelector(".custom-select-value");
 
     // Toggle dropdown
-    trigger.addEventListener('click', (e) => {
+    trigger.addEventListener("click", e => {
         e.stopPropagation();
-        const isOpen = !dropdown.classList.contains('hidden');
+        const isOpen = !dropdown.classList.contains("hidden");
 
         // Close all other dropdowns
-        document.querySelectorAll('.custom-select-dropdown').forEach(dd => {
+        document.querySelectorAll(".custom-select-dropdown").forEach(dd => {
             if (dd !== dropdown) {
-                dd.classList.add('hidden');
+                dd.classList.add("hidden");
                 const otherTrigger = dd.previousElementSibling;
-                otherTrigger.classList.remove('ring-1', 'ring-primary-500', 'border-primary-500');
-                otherTrigger.querySelector('.custom-select-arrow').classList.remove('rotate-180');
+                otherTrigger.classList.remove("ring-1", "ring-primary-500", "border-primary-500");
+                otherTrigger.querySelector(".custom-select-arrow").classList.remove("rotate-180");
             }
         });
 
         // Toggle this dropdown
-        dropdown.classList.toggle('hidden');
-        trigger.classList.toggle('ring-1');
-        trigger.classList.toggle('ring-primary-500');
-        trigger.classList.toggle('border-primary-500');
-        arrow.classList.toggle('rotate-180');
+        dropdown.classList.toggle("hidden");
+        trigger.classList.toggle("ring-1");
+        trigger.classList.toggle("ring-primary-500");
+        trigger.classList.toggle("border-primary-500");
+        arrow.classList.toggle("rotate-180");
 
         if (!isOpen) {
-            searchInput.value = ''; // Clear search
+            searchInput.value = ""; // Clear search
             searchInput.focus();
             // Show all options
-            optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('hidden'));
+            optionsContainer.querySelectorAll(".custom-select-option").forEach(opt => opt.classList.remove("hidden"));
         }
     });
 
     // Search functionality
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener("input", e => {
         const searchTerm = e.target.value.toLowerCase();
-        optionsContainer.querySelectorAll('.custom-select-option').forEach(option => {
+        optionsContainer.querySelectorAll(".custom-select-option").forEach(option => {
             const text = option.textContent.toLowerCase();
-            option.classList.toggle('hidden', !text.includes(searchTerm));
+            option.classList.toggle("hidden", !text.includes(searchTerm));
         });
     });
 
     // Prevent search input from closing dropdown
-    searchInput.addEventListener('click', (e) => {
+    searchInput.addEventListener("click", e => {
         e.stopPropagation();
     });
 
     // Option selection
-    optionsContainer.addEventListener('click', (e) => {
-        const option = e.target.closest('.custom-select-option');
+    optionsContainer.addEventListener("click", e => {
+        const option = e.target.closest(".custom-select-option");
         if (!option) return;
 
         const value = option.dataset.value;
 
         // Update selected state
-        optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
-            opt.classList.remove('bg-mrs-button', 'text-white');
+        optionsContainer.querySelectorAll(".custom-select-option").forEach(opt => {
+            opt.classList.remove("bg-mrs-button", "text-white");
         });
-        option.classList.add('bg-mrs-button', 'text-white');
+        option.classList.add("bg-mrs-button", "text-white");
 
         // Update display
         valueDisplay.textContent = value;
@@ -477,17 +477,17 @@ function initializeCustomSelect(selectId, shipId) {
         updateShipName(shipId, value);
 
         // Close dropdown
-        dropdown.classList.add('hidden');
-        trigger.classList.remove('ring-1', 'ring-primary-500', 'border-primary-500');
-        arrow.classList.remove('rotate-180');
+        dropdown.classList.add("hidden");
+        trigger.classList.remove("ring-1", "ring-primary-500", "border-primary-500");
+        arrow.classList.remove("rotate-180");
     });
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", e => {
         if (!wrapper.contains(e.target)) {
-            dropdown.classList.add('hidden');
-            trigger.classList.remove('ring-1', 'ring-primary-500', 'border-primary-500');
-            arrow.classList.remove('rotate-180');
+            dropdown.classList.add("hidden");
+            trigger.classList.remove("ring-1", "ring-primary-500", "border-primary-500");
+            arrow.classList.remove("rotate-180");
         }
     });
 }
@@ -500,29 +500,31 @@ function initializeCustomSelect(selectId, shipId) {
  * @function renderShips
  */
 function renderShips() {
-    const container = document.getElementById('shipList');
-    container.innerHTML = '';
+    const container = document.getElementById("shipList");
+    container.innerHTML = "";
 
-    ships.forEach((ship) => {
-        const shipDiv = document.createElement('div');
+    ships.forEach(ship => {
+        const shipDiv = document.createElement("div");
         const customSelectId = `custom-select-${ship.id}`;
 
         // Ship Card
-        shipDiv.className = 'rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-md';
+        shipDiv.className = "rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-md";
         shipDiv.innerHTML = `
             <div class="mb-3 flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
                     <!-- Ship Type Select -->
-                    <select onchange="updateShipType(${ship.id}, this.value)" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
-                        ${Object.keys(EMOJIS.shipTypes).map(type =>
-                            `<option value="${type}" ${ship.type === type ? 'selected' : ''}>${type}</option>`
-                        ).join('')}
+                    <select onchange="updateShipType(${
+                        ship.id
+                    }, this.value)" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
+                        ${Object.keys(EMOJIS.shipTypes)
+                            .map(type => `<option value="${type}" ${ship.type === type ? "selected" : ""}>${type}</option>`)
+                            .join("")}
                     </select>
 
                     <!-- Custom Ship Name Select -->
                     <div class="custom-select-wrapper relative w-full min-w-[250px] md:w-auto" id="${customSelectId}">
                         <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
-                            <span class="custom-select-value truncate pr-4">${ship.ship || 'Select a ship...'}</span>
+                            <span class="custom-select-value truncate pr-4">${ship.ship || "Select a ship..."}</span>
                             <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
@@ -532,21 +534,28 @@ function renderShips() {
                                 <input type="text" placeholder="Search ships..." class="ship-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
                             </div>
                             <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto">
-                                ${SHIPS.map(shipName =>
-                                    `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white ${shipName === ship.ship ? 'bg-mrs-button text-white' : ''}" data-value="${shipName}">${shipName}</div>`
-                                ).join('')}
+                                ${SHIPS.map(
+                                    shipName =>
+                                        `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white ${
+                                            shipName === ship.ship ? "bg-mrs-button text-white" : ""
+                                        }" data-value="${shipName}">${shipName}</div>`
+                                ).join("")}
                             </div>
                         </div>
                     </div>
                 </div>
-                <button class="w-full flex-shrink-0 rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 hover:border-red-700 md:w-auto" onclick="removeShip(${ship.id})">Remove Ship</button>
+                <button class="w-full flex-shrink-0 rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 hover:border-red-700 md:w-auto" onclick="removeShip(${
+                    ship.id
+                })">Remove Ship</button>
             </div>
 
             <!-- Crew List -->
             <div id="crew-${ship.id}" data-ship-id="${ship.id}" class="crew-list flex min-h-[50px] flex-col gap-2 rounded-md border-2 border-dashed border-gray-800 p-2"></div>
 
             <!-- Add Crew Button -->
-            <button class="mt-3 rounded-lg border border-mrs-button bg-mrs-button px-4 py-2 text-sm font-medium text-white transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="addCrewMember(${ship.id})">+ Add Crew Member</button>
+            <button class="mt-3 rounded-lg border border-mrs-button bg-mrs-button px-4 py-2 text-sm font-medium text-white transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="addCrewMember(${
+                ship.id
+            })">+ Add Crew Member</button>
         `;
         container.appendChild(shipDiv);
 
@@ -557,33 +566,35 @@ function renderShips() {
         const crewContainer = document.getElementById(`crew-${ship.id}`);
 
         // Allow dropping on empty crew lists
-        crewContainer.addEventListener('dragover', handleDragOver);
-        crewContainer.addEventListener('drop', handleDropOnEmptyList);
+        crewContainer.addEventListener("dragover", handleDragOver);
+        crewContainer.addEventListener("drop", handleDropOnEmptyList);
 
-        ship.crew.forEach((crew) => {
-            const crewDiv = document.createElement('div');
-            crewDiv.className = 'crew-member flex flex-wrap cursor-move items-center gap-2 rounded-lg border border-gray-700 bg-mrs-bg p-2 shadow-sm';
+        ship.crew.forEach(crew => {
+            const crewDiv = document.createElement("div");
+            crewDiv.className = "crew-member flex flex-wrap cursor-move items-center gap-2 rounded-lg border border-gray-700 bg-mrs-bg p-2 shadow-sm";
             crewDiv.draggable = true;
             crewDiv.dataset.crewId = crew.id;
             crewDiv.innerHTML = `
                 <!-- Position Select (Manual) -->
-                <select onchange="updateCrewPosition(${ship.id}, ${crew.id}, this.value)" class="flex-shrink-0 min-w-[60px] cursor-pointer rounded-lg border border-mrs-button bg-mrs-box px-2 py-2 text-center text-sm font-semibold text-blue-300 transition hover:bg-mrs-button-hover focus:outline-none focus:ring-2 focus:ring-mrs-button">
-                    <option value="" ${!crew.position ? 'selected' : ''}>-</option>
-                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num =>
-                        `<option value="${num}" ${(crew.position || "") === num ? 'selected' : ''}>${num}</option>`
-                    ).join('')}
+                <select onchange="updateCrewPosition(${ship.id}, ${
+                crew.id
+            }, this.value)" class="flex-shrink-0 min-w-[60px] cursor-pointer rounded-lg border border-mrs-button bg-mrs-box px-2 py-2 text-center text-sm font-semibold text-blue-300 transition hover:bg-mrs-button-hover focus:outline-none focus:ring-2 focus:ring-mrs-button">
+                    <option value="" ${!crew.position ? "selected" : ""}>-</option>
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => `<option value="${num}" ${(crew.position || "") === num ? "selected" : ""}>${num}</option>`).join("")}
                 </select>
 
                 <!-- Role Select -->
-                <select onchange="updateCrewRole(${ship.id}, ${crew.id}, this.value)" class="flex-none min-w-[100px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
-                    ${Object.keys(EMOJIS.roles).map(role =>
-                        `<option value="${role}" ${crew.role === role ? 'selected' : ''}>${role}</option>`
-                    ).join('')}
+                <select onchange="updateCrewRole(${ship.id}, ${
+                crew.id
+            }, this.value)" class="flex-none min-w-[100px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
+                    ${Object.keys(EMOJIS.roles)
+                        .map(role => `<option value="${role}" ${crew.role === role ? "selected" : ""}>${role}</option>`)
+                        .join("")}
                 </select>
 
                 <!-- Name Input -->
                 <input type="text" placeholder="Name (optional)"
-                       value="${crew.name || ''}"
+                       value="${crew.name || ""}"
                        onchange="updateCrewName(${ship.id}, ${crew.id}, this.value)"
                        class="hidden w-36 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:italic placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:block">
 
@@ -595,19 +606,21 @@ function renderShips() {
 
                 <!-- Comment Input -->
                 <input type="text" placeholder="Comment (e.g., Turret)"
-                       value="${crew.comment || ''}"
+                       value="${crew.comment || ""}"
                        onchange="updateCrewComment(${ship.id}, ${crew.id}, this.value)"
                        class="flex-1 min-w-[150px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:italic placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
 
                 <!-- Remove Crew Button -->
-                <button class="flex-shrink-0 rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 hover:border-red-700" onclick="removeCrewMember(${ship.id}, ${crew.id})">×</button>
+                <button class="flex-shrink-0 rounded-lg border border-red-600 bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 hover:border-red-700" onclick="removeCrewMember(${
+                    ship.id
+                }, ${crew.id})">×</button>
             `;
 
             // Drag and drop handlers
-            crewDiv.addEventListener('dragstart', handleDragStart);
-            crewDiv.addEventListener('dragend', handleDragEnd);
-            crewDiv.addEventListener('dragover', handleDragOver);
-            crewDiv.addEventListener('drop', handleDrop);
+            crewDiv.addEventListener("dragstart", handleDragStart);
+            crewDiv.addEventListener("dragend", handleDragEnd);
+            crewDiv.addEventListener("dragover", handleDragOver);
+            crewDiv.addEventListener("drop", handleDrop);
 
             crewContainer.appendChild(crewDiv);
         });
@@ -627,17 +640,17 @@ function renderShips() {
  */
 function handleDragStart(e) {
     // Check if the event target is an input or select
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") {
         e.preventDefault();
         return;
     }
-    draggedElement = e.target.closest('.crew-member');
+    draggedElement = e.target.closest(".crew-member");
     if (!draggedElement) return;
 
-    draggedShipId = parseInt(draggedElement.closest('.crew-list').dataset.shipId);
+    draggedShipId = parseInt(draggedElement.closest(".crew-list").dataset.shipId);
     // Use setTimeout to allow the browser to render the drag image
     setTimeout(() => {
-        draggedElement.classList.add('dragging');
+        draggedElement.classList.add("dragging");
     }, 0);
 }
 
@@ -650,7 +663,7 @@ function handleDragStart(e) {
  */
 function handleDragEnd(e) {
     if (draggedElement) {
-        draggedElement.classList.remove('dragging');
+        draggedElement.classList.remove("dragging");
         draggedElement = null;
     }
 }
@@ -676,9 +689,9 @@ function handleDrop(e) {
     e.preventDefault();
     if (!draggedElement) return;
 
-    const targetElement = e.target.closest('.crew-member');
+    const targetElement = e.target.closest(".crew-member");
     if (targetElement && targetElement !== draggedElement) {
-        const targetShipId = parseInt(targetElement.closest('.crew-list').dataset.shipId);
+        const targetShipId = parseInt(targetElement.closest(".crew-list").dataset.shipId);
         const draggedShip = ships.find(s => s.id === draggedShipId);
         const targetShip = ships.find(s => s.id === targetShipId);
 
@@ -691,8 +704,7 @@ function handleDrop(e) {
             const targetIndex = draggedShip.crew.findIndex(c => c.id === targetCrewId);
 
             // Swap positions
-            [draggedShip.crew[draggedIndex], draggedShip.crew[targetIndex]] =
-                [draggedShip.crew[targetIndex], draggedShip.crew[draggedIndex]];
+            [draggedShip.crew[draggedIndex], draggedShip.crew[targetIndex]] = [draggedShip.crew[targetIndex], draggedShip.crew[draggedIndex]];
         } else {
             // Moving crew member to a different ship
             const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
@@ -723,7 +735,7 @@ function handleDropOnEmptyList(e) {
     if (!draggedElement) return;
 
     // Only handle if dropped on the crew list itself, not on a crew member
-    if (e.target.classList.contains('crew-list')) {
+    if (e.target.classList.contains("crew-list")) {
         const targetShipId = parseInt(e.target.dataset.shipId);
         const draggedShip = ships.find(s => s.id === draggedShipId);
         const targetShip = ships.find(s => s.id === targetShipId);
@@ -766,28 +778,28 @@ function generateOutput() {
 
     ships.forEach(ship => {
         if (ship.crew.length > 0) {
-            const shipTypeEmoji = EMOJIS.shipTypes[ship.type] || '🚀';
+            const shipTypeEmoji = EMOJIS.shipTypes[ship.type] || "🚀";
             output += `## __**${ship.type}**__ ${shipTypeEmoji} ${ship.ship}\n`;
 
             ship.crew.forEach(crew => {
-                const roleEmoji = EMOJIS.roles[crew.role] || '👤';
-                const mention = crew.discordId ? `<@${crew.discordId}>` : '[No Discord ID]';
+                const roleEmoji = EMOJIS.roles[crew.role] || "👤";
+                const mention = crew.discordId ? `<@${crew.discordId}>` : "[No Discord ID]";
 
-                let positionText = '';
+                let positionText = "";
                 if (crew.position) {
                     const positionEmoji = EMOJIS.positions[crew.position] || crew.position;
                     positionText = ` ${positionEmoji}`; // Only add if position is set
                 }
 
-                let commentText = '';
-                if (crew.comment && crew.comment.trim() !== '') {
+                let commentText = "";
+                if (crew.comment && crew.comment.trim() !== "") {
                     commentText = ` (${crew.comment.trim()})`; // Add leading space and parenthesis
                 }
 
                 output += `> ${roleEmoji} - ${mention}${positionText}${commentText}\n`;
             });
 
-            output += '\n';
+            output += "\n";
         }
     });
 
@@ -804,9 +816,9 @@ function generateOutput() {
  * @function updatePreview
  */
 function updatePreview() {
-    const preview = document.getElementById('preview');
+    const preview = document.getElementById("preview");
     if (ships.length === 0 || ships.every(s => s.crew.length === 0)) {
-        preview.textContent = 'Add ships and crew members to see preview...';
+        preview.textContent = "Add ships and crew members to see preview...";
     } else {
         preview.textContent = generateOutput();
     }
@@ -825,30 +837,33 @@ function copyToClipboard() {
     // Use execCommand as a fallback for clipboard API
     if (!navigator.clipboard) {
         try {
-            const textArea = document.createElement('textarea');
+            const textArea = document.createElement("textarea");
             textArea.value = output;
-            textArea.style.position = 'fixed'; // Prevent scrolling to bottom
-            textArea.style.top = '0';
-            textArea.style.left = '0';
+            textArea.style.position = "fixed"; // Prevent scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
-            document.execCommand('copy');
+            document.execCommand("copy");
             document.body.removeChild(textArea);
             showSuccessMessage();
         } catch (err) {
-            console.error('Fallback: Oops, unable to copy', err);
-            alert('Failed to copy to clipboard. Please try again.');
+            console.error("Fallback: Oops, unable to copy", err);
+            alert("Failed to copy to clipboard. Please try again.");
         }
         return;
     }
 
-    navigator.clipboard.writeText(output).then(() => {
-        showSuccessMessage();
-    }).catch(err => {
-        alert('Failed to copy to clipboard. Please try again.');
-        console.error('Failed to copy:', err);
-    });
+    navigator.clipboard
+        .writeText(output)
+        .then(() => {
+            showSuccessMessage();
+        })
+        .catch(err => {
+            alert("Failed to copy to clipboard. Please try again.");
+            console.error("Failed to copy:", err);
+        });
 }
 
 /**
@@ -858,10 +873,10 @@ function copyToClipboard() {
  * @function showSuccessMessage
  */
 function showSuccessMessage() {
-    const successMessage = document.getElementById('successMessage');
-    successMessage.classList.remove('hidden');
+    const successMessage = document.getElementById("successMessage");
+    successMessage.classList.remove("hidden");
     setTimeout(() => {
-        successMessage.classList.add('hidden');
+        successMessage.classList.add("hidden");
     }, 3000);
 }
 
@@ -877,11 +892,11 @@ function showSuccessMessage() {
  * @function importFromDiscord
  */
 function importFromDiscord() {
-    const message = document.getElementById('import-discord-message').value;
-    const statusEl = document.getElementById('import-status');
+    const message = document.getElementById("import-discord-message").value;
+    const statusEl = document.getElementById("import-status");
 
     if (!message.trim()) {
-        showImportStatus('error', 'Please paste a Discord message first.');
+        showImportStatus("error", "Please paste a Discord message first.");
         return;
     }
 
@@ -890,7 +905,7 @@ function importFromDiscord() {
         const parsedShips = parseDiscordMessage(message);
 
         if (parsedShips.length === 0) {
-            showImportStatus('error', 'No ships found in the message. Make sure it\'s a valid ship assignment message.');
+            showImportStatus("error", "No ships found in the message. Make sure it's a valid ship assignment message.");
             return;
         }
 
@@ -901,13 +916,13 @@ function importFromDiscord() {
         renderShips();
         updatePreview();
 
-        showImportStatus('success', `Successfully imported ${parsedShips.length} ship(s) with ${parsedShips.reduce((sum, s) => sum + s.crew.length, 0)} crew member(s)!`);
+        showImportStatus("success", `Successfully imported ${parsedShips.length} ship(s) with ${parsedShips.reduce((sum, s) => sum + s.crew.length, 0)} crew member(s)!`);
 
         // Clear the import textarea
-        document.getElementById('import-discord-message').value = '';
+        document.getElementById("import-discord-message").value = "";
     } catch (error) {
-        console.error('Import error:', error);
-        showImportStatus('error', 'Failed to parse message: ' + error.message);
+        console.error("Import error:", error);
+        showImportStatus("error", "Failed to parse message: " + error.message);
     }
 }
 
@@ -924,7 +939,7 @@ function parseDiscordMessage(message) {
     let currentShipId = 0;
 
     // Split message into lines
-    const lines = message.split('\n');
+    const lines = message.split("\n");
 
     let currentShip = null;
 
@@ -942,7 +957,7 @@ function parseDiscordMessage(message) {
         }
 
         // Skip footer (starts with -#)
-        if (line.startsWith('-#')) {
+        if (line.startsWith("-#")) {
             continue;
         }
 
@@ -976,18 +991,18 @@ function parseDiscordMessage(message) {
             const remainder = crewMatch[3].trim();
 
             // Find role from emoji
-            const role = EMOJI_TO_ROLE[roleEmoji] || 'PIL';
+            const role = EMOJI_TO_ROLE[roleEmoji] || "PIL";
 
             // Parse position and comment from remainder
             let position = null;
-            let comment = '';
+            let comment = "";
 
             // Try to find position emoji (with <: brackets)
             for (const [emoji, num] of Object.entries(EMOJI_TO_POSITION)) {
                 if (remainder.includes(emoji)) {
                     position = num;
                     // Remove position emoji from remainder to get comment
-                    const parts = remainder.replace(emoji, '').trim();
+                    const parts = remainder.replace(emoji, "").trim();
                     // Extract comment from parentheses if present
                     const commentMatch = parts.match(/\(([^)]+)\)/);
                     if (commentMatch) {
@@ -1003,7 +1018,7 @@ function parseDiscordMessage(message) {
                 if (barePositionMatch) {
                     position = parseInt(barePositionMatch[1]);
                     // Remove position from remainder to get comment
-                    const parts = remainder.replace(barePositionMatch[0], '').trim();
+                    const parts = remainder.replace(barePositionMatch[0], "").trim();
                     // Extract comment from parentheses if present
                     const commentMatch = parts.match(/\(([^)]+)\)/);
                     if (commentMatch) {
@@ -1024,7 +1039,7 @@ function parseDiscordMessage(message) {
                 id: Date.now() + Math.random(), // Unique ID
                 role: role,
                 position: position,
-                name: '',
+                name: "",
                 discordId: discordId,
                 comment: comment
             });
@@ -1048,20 +1063,20 @@ function parseDiscordMessage(message) {
  * @param {string} message - The status message to display
  */
 function showImportStatus(type, message) {
-    const statusEl = document.getElementById('import-status');
-    statusEl.className = 'mt-3 rounded-lg px-4 py-3 text-center font-medium';
+    const statusEl = document.getElementById("import-status");
+    statusEl.className = "mt-3 rounded-lg px-4 py-3 text-center font-medium";
 
-    if (type === 'success') {
-        statusEl.classList.add('bg-green-600', 'text-white');
+    if (type === "success") {
+        statusEl.classList.add("bg-green-600", "text-white");
     } else {
-        statusEl.classList.add('bg-red-600', 'text-white');
+        statusEl.classList.add("bg-red-600", "text-white");
     }
 
     statusEl.textContent = message;
-    statusEl.classList.remove('hidden');
+    statusEl.classList.remove("hidden");
 
     setTimeout(() => {
-        statusEl.classList.add('hidden');
+        statusEl.classList.add("hidden");
     }, 5000);
 }
 
