@@ -321,6 +321,113 @@ function listCachedCrew() {
 }
 
 // ============================================================================
+// SHIP ASSIGNMENT PERSISTENCE (localStorage)
+// ============================================================================
+
+/**
+ * localStorage key for ship assignments
+ * @type {string}
+ */
+const SHIP_ASSIGNMENTS_STORAGE_KEY = "mrs_ship_assignments";
+
+/**
+ * Saves current ship assignments to localStorage.
+ * Called after any modification to the ships array.
+ *
+ * @function saveShipAssignments
+ */
+function saveShipAssignments() {
+    try {
+        const data = {
+            ships: ships,
+            shipIdCounter: shipIdCounter,
+            savedAt: Date.now()
+        };
+        localStorage.setItem(SHIP_ASSIGNMENTS_STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+        console.warn("Failed to save ship assignments:", e);
+    }
+}
+
+/**
+ * Loads ship assignments from localStorage.
+ * Returns true if assignments were loaded, false if starting fresh.
+ *
+ * @function loadShipAssignments
+ * @returns {boolean} Whether assignments were loaded from storage
+ */
+function loadShipAssignments() {
+    try {
+        const stored = localStorage.getItem(SHIP_ASSIGNMENTS_STORAGE_KEY);
+        if (stored) {
+            const data = JSON.parse(stored);
+            if (data.ships && Array.isArray(data.ships)) {
+                ships = data.ships;
+                shipIdCounter = data.shipIdCounter || 0;
+                return true;
+            }
+        }
+    } catch (e) {
+        console.warn("Failed to load ship assignments:", e);
+    }
+    return false;
+}
+
+/**
+ * Clears saved ship assignments from localStorage and resets the UI.
+ * Can be called from browser console or via UI button.
+ *
+ * @function clearShipAssignments
+ */
+function clearShipAssignments() {
+    localStorage.removeItem(SHIP_ASSIGNMENTS_STORAGE_KEY);
+    ships = [];
+    shipIdCounter = 0;
+    renderShips();
+    updatePreview();
+    console.log("Ship assignments cleared");
+}
+
+/**
+ * Shows a confirmation dialog before clearing all ship assignments.
+ * Called by the "Clear All" button in the UI.
+ *
+ * @function confirmClearShipAssignments
+ */
+function confirmClearShipAssignments() {
+    if (ships.length === 0) {
+        // Nothing to clear
+        return;
+    }
+
+    const crewCount = ships.reduce((sum, s) => sum + s.crew.length, 0);
+    const message = `Are you sure you want to clear all ${ships.length} ship(s) and ${crewCount} crew member(s)?\n\nThis cannot be undone.`;
+
+    if (confirm(message)) {
+        clearShipAssignments();
+    }
+}
+
+/**
+ * Gets the timestamp of when ship assignments were last saved.
+ *
+ * @function getShipAssignmentsSavedTime
+ * @returns {Date|null} The save timestamp, or null if not saved
+ */
+function getShipAssignmentsSavedTime() {
+    try {
+        const stored = localStorage.getItem(SHIP_ASSIGNMENTS_STORAGE_KEY);
+        if (stored) {
+            const data = JSON.parse(stored);
+            return data.savedAt ? new Date(data.savedAt) : null;
+        }
+    } catch (e) {
+        // Ignore
+    }
+    return null;
+}
+
+// ============================================================================
 // SHIP MANAGEMENT FUNCTIONS
 // ============================================================================
 
@@ -356,6 +463,7 @@ function addShip() {
     });
     renderShips();
     updatePreview();
+    saveShipAssignments();
 }
 
 /**
@@ -370,6 +478,7 @@ function removeShip(shipId) {
     // No position update needed, numbers are sticky
     renderShips();
     updatePreview();
+    saveShipAssignments();
 }
 
 /**
@@ -384,6 +493,7 @@ function updateShipType(shipId, type) {
     if (ship) {
         ship.type = type;
         updatePreview();
+        saveShipAssignments();
     }
 }
 
@@ -399,6 +509,7 @@ function updateShipName(shipId, name) {
     if (ship) {
         ship.ship = name;
         updatePreview();
+        saveShipAssignments();
     }
 }
 
@@ -497,6 +608,7 @@ function addCrewMember(shipId) {
         });
         renderShips();
         updatePreview();
+        saveShipAssignments();
     }
 }
 
@@ -538,6 +650,7 @@ function removeCrewMember(shipId, crewId) {
 
         renderShips();
         updatePreview();
+        saveShipAssignments();
     }
 }
 
@@ -556,6 +669,7 @@ function updateCrewRole(shipId, crewId, role) {
         if (crew) {
             crew.role = role;
             updatePreview();
+            saveShipAssignments();
         }
     }
 }
@@ -577,6 +691,7 @@ function updateCrewPosition(shipId, crewId, position) {
             // Store blank as null, otherwise parse as number
             crew.position = position ? parseInt(position) : null;
             updatePreview();
+            saveShipAssignments();
         }
     }
 }
@@ -599,6 +714,7 @@ function updateCrewName(shipId, crewId, name) {
             crew.name = name;
             // Cache the Discord ID -> Name association
             cacheCrewMember(crew.discordId, name);
+            saveShipAssignments();
             // Name doesn't affect preview, so no need to updatePreview()
         }
     }
@@ -634,6 +750,7 @@ function updateCrewDiscordId(shipId, crewId, discordId) {
             cacheCrewMember(discordId, crew.name);
 
             updatePreview();
+            saveShipAssignments();
         }
     }
 }
@@ -654,6 +771,7 @@ function updateCrewComment(shipId, crewId, comment) {
         if (crew) {
             crew.comment = comment;
             updatePreview();
+            saveShipAssignments();
         }
     }
 }
@@ -1059,6 +1177,7 @@ function handleDrop(e) {
     }
     renderShips();
     updatePreview();
+    saveShipAssignments();
 }
 
 /**
@@ -1111,6 +1230,7 @@ function handleDropOnEmptyList(e) {
         }
         renderShips();
         updatePreview();
+        saveShipAssignments();
     }
 }
 
@@ -1271,6 +1391,7 @@ function importFromDiscord() {
 
         renderShips();
         updatePreview();
+        saveShipAssignments();
 
         // Close modal immediately
         closeImportModal();
@@ -1506,5 +1627,9 @@ function showImportSuccessBanner(message) {
 // INITIALIZATION
 // ============================================================================
 
-// Initialize with empty state
+// Load saved ship assignments from localStorage, or start fresh
+if (loadShipAssignments()) {
+    console.log("Ship assignments restored from cache");
+}
 renderShips();
+updatePreview();
