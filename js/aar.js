@@ -690,8 +690,9 @@ async function initializePlanetaryBodies() {
 // ============================================================================
 
 /**
- * Populates AAR ship dropdowns (Gunship and Medical) from current ship assignments
- * Extracts unique ships from the ships array and populates both dropdowns
+ * Populates AAR ship dropdowns (Gunship, Medical, and CAP) from current ship assignments
+ * Extracts unique ships from the ships array and populates dropdowns
+ * Pre-selects ships based on their type in Ship Assignments
  */
 function populateAARShipDropdowns() {
     const assignedShips = ships.map(s => s.ship).filter(s => s && s.trim() !== "");
@@ -699,9 +700,16 @@ function populateAARShipDropdowns() {
     // Get unique ships (in case of duplicates)
     const uniqueShips = [...new Set(assignedShips)];
 
-    // Populate each ship dropdown (CAP is now a text input, not dropdown)
-    populateAARShipDropdown("aar-gunship", uniqueShips);
-    populateAARShipDropdown("aar-medical", uniqueShips);
+    // Find Gunship and Medship from assignments
+    const gunshipAssignment = ships.find(s => s.type === "Gunship" && s.ship && s.ship.trim() !== "");
+    const medshipAssignment = ships.find(s => s.type === "Medship" && s.ship && s.ship.trim() !== "");
+
+    // Populate Gunship and Medical dropdowns with pre-selection
+    populateAARShipDropdown("aar-gunship", uniqueShips, gunshipAssignment?.ship || null);
+    populateAARShipDropdown("aar-medical", uniqueShips, medshipAssignment?.ship || null);
+
+    // Populate CAP dropdowns from CAP ships in assignments
+    populateCAPFromAssignments();
 }
 
 /**
@@ -710,8 +718,9 @@ function populateAARShipDropdowns() {
  *
  * @param {string} selectId - The ID of the select element (e.g., 'aar-gunship')
  * @param {Array<string>} assignedShips - Array of ship names from current assignments
+ * @param {string|null} preselectedShip - Optional ship name to pre-select
  */
-function populateAARShipDropdown(selectId, assignedShips) {
+function populateAARShipDropdown(selectId, assignedShips, preselectedShip = null) {
     const optionsContainer = document.getElementById(selectId + "-options");
     if (!optionsContainer) {
         console.warn("Options container not found for:", selectId);
@@ -737,10 +746,255 @@ function populateAARShipDropdown(selectId, assignedShips) {
 
     optionsContainer.innerHTML = options;
 
+    // Pre-select the ship if provided
+    if (preselectedShip) {
+        const valueDisplay = document.getElementById(selectId + "-value");
+        if (valueDisplay) {
+            valueDisplay.textContent = preselectedShip;
+        }
+    }
+
     // Wait a tick for DOM to update, then initialize the select
     setTimeout(() => {
         initializeAARSelect(selectId);
     }, 0);
+}
+
+// ============================================================================
+// CAP SHIP DROPDOWN FUNCTIONS
+// ============================================================================
+
+/**
+ * Counter for unique CAP dropdown IDs
+ * @type {number}
+ */
+let capDropdownCounter = 0;
+
+/**
+ * Adds a new CAP ship dropdown to the container
+ * When a ship is selected, automatically adds another empty dropdown
+ *
+ * @param {string} [preselectedShip] - Optional ship name to pre-select
+ */
+function addCAPShipDropdown(preselectedShip = null) {
+    const container = document.getElementById("aar-cap-container");
+    if (!container) return;
+
+    // Hide the "No CAP ships" message
+    const emptyMsg = document.getElementById("aar-cap-empty");
+    if (emptyMsg) emptyMsg.classList.add("hidden");
+
+    const dropdownId = `aar-cap-${capDropdownCounter++}`;
+
+    // Get ships from assignments and all ships
+    const assignedShips = ships.map(s => s.ship).filter(s => s && s.trim() !== "");
+    const uniqueAssignedShips = [...new Set(assignedShips)];
+
+    // Build options HTML
+    let optionsHtml = "";
+    if (uniqueAssignedShips.length > 0) {
+        optionsHtml += '<div class="px-3 py-2 text-xs font-semibold uppercase text-blue-300 bg-gray-800">From Assignments</div>';
+        uniqueAssignedShips.forEach(ship => {
+            optionsHtml += `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white" data-value="${ship}">${ship}</div>`;
+        });
+        optionsHtml += '<div class="border-t border-gray-600 my-1"></div>';
+        optionsHtml += '<div class="px-3 py-2 text-xs font-semibold uppercase text-blue-300 bg-gray-800">All Ships</div>';
+    }
+    SHIPS.forEach(ship => {
+        optionsHtml += `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-300 hover:bg-mrs-button hover:text-white" data-value="${ship}">${ship}</div>`;
+    });
+
+    // Create the dropdown wrapper
+    const wrapper = document.createElement("div");
+    wrapper.className = "cap-ship-wrapper relative flex items-center gap-1";
+    wrapper.id = dropdownId + "-wrapper";
+    wrapper.innerHTML = `
+        <div class="custom-select-wrapper relative flex-1" id="${dropdownId}-select" style="min-width: 180px;">
+            <div class="custom-select-trigger relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-primary-500">
+                <span class="custom-select-value truncate pr-4" id="${dropdownId}-value">${preselectedShip || "Select CAP ship..."}</span>
+                <svg class="custom-select-arrow absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="custom-select-dropdown absolute left-0 right-0 top-full z-50 mt-1 hidden overflow-hidden rounded-md border border-gray-600 bg-gray-700 shadow-lg">
+                <div class="border-b border-gray-600 bg-gray-800 p-2">
+                    <input type="text" placeholder="Search ships..." class="cap-ship-search-input w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-gray-200 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                </div>
+                <div class="custom-select-options custom-scrollbar max-h-60 overflow-y-auto" id="${dropdownId}-options">
+                    ${optionsHtml}
+                </div>
+            </div>
+        </div>
+        <button type="button" onclick="removeCAPShipDropdown('${dropdownId}-wrapper')" class="rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-red-400 transition">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    `;
+
+    container.appendChild(wrapper);
+
+    // Initialize the dropdown
+    setTimeout(() => {
+        initializeCAPDropdown(dropdownId);
+    }, 0);
+}
+
+/**
+ * Removes a CAP ship dropdown from the container
+ *
+ * @param {string} wrapperId - The ID of the wrapper element to remove
+ */
+function removeCAPShipDropdown(wrapperId) {
+    const wrapper = document.getElementById(wrapperId);
+    if (wrapper) {
+        wrapper.remove();
+    }
+
+    // Show "No CAP ships" message if container is empty
+    const container = document.getElementById("aar-cap-container");
+    const emptyMsg = document.getElementById("aar-cap-empty");
+    if (container && emptyMsg) {
+        const hasDropdowns = container.querySelectorAll(".cap-ship-wrapper").length > 0;
+        if (!hasDropdowns) {
+            emptyMsg.classList.remove("hidden");
+        }
+    }
+}
+
+/**
+ * Initializes a CAP ship dropdown with event listeners
+ *
+ * @param {string} dropdownId - The base ID of the dropdown (without -select suffix)
+ */
+function initializeCAPDropdown(dropdownId) {
+    const wrapper = document.getElementById(dropdownId + "-select");
+    if (!wrapper) return;
+
+    const trigger = wrapper.querySelector(".custom-select-trigger");
+    const dropdown = wrapper.querySelector(".custom-select-dropdown");
+    const searchInput = wrapper.querySelector(".cap-ship-search-input");
+    const optionsContainer = wrapper.querySelector(".custom-select-options");
+    const valueDisplay = document.getElementById(dropdownId + "-value");
+
+    trigger.addEventListener("click", e => {
+        e.stopPropagation();
+        const isOpen = !dropdown.classList.contains("hidden");
+
+        // Close all other dropdowns
+        document.querySelectorAll(".custom-select-dropdown").forEach(dd => {
+            if (dd !== dropdown) dd.classList.add("hidden");
+        });
+
+        dropdown.classList.toggle("hidden");
+        trigger.classList.toggle("ring-1");
+        trigger.classList.toggle("ring-primary-500");
+        wrapper.querySelector(".custom-select-arrow").classList.toggle("rotate-180");
+
+        if (!isOpen && searchInput) {
+            searchInput.value = "";
+            optionsContainer.querySelectorAll(".custom-select-option").forEach(opt => opt.classList.remove("hidden"));
+            searchInput.focus();
+        }
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener("input", e => {
+            const searchTerm = e.target.value.toLowerCase();
+            optionsContainer.querySelectorAll(".custom-select-option").forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.classList.toggle("hidden", !text.includes(searchTerm));
+            });
+        });
+        searchInput.addEventListener("click", e => e.stopPropagation());
+    }
+
+    optionsContainer.addEventListener("click", e => {
+        const option = e.target.closest(".custom-select-option");
+        if (!option) return;
+
+        const value = option.dataset.value;
+        const previousValue = valueDisplay.textContent;
+        valueDisplay.textContent = value;
+
+        dropdown.classList.add("hidden");
+        trigger.classList.remove("ring-1", "ring-primary-500");
+        wrapper.querySelector(".custom-select-arrow").classList.remove("rotate-180");
+
+        // If this was an empty dropdown and now has a value, add another empty one
+        if (previousValue === "Select CAP ship..." && value !== "Select CAP ship...") {
+            // Don't auto-add, user can click "+ Add CAP" if needed
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", e => {
+        if (!wrapper.contains(e.target)) {
+            dropdown.classList.add("hidden");
+            trigger.classList.remove("ring-1", "ring-primary-500");
+            wrapper.querySelector(".custom-select-arrow")?.classList.remove("rotate-180");
+        }
+    });
+}
+
+/**
+ * Populates CAP dropdowns based on CAP ships in the Ship Assignment tab
+ * Called when switching to AAR tab
+ */
+function populateCAPFromAssignments() {
+    const container = document.getElementById("aar-cap-container");
+    if (!container) return;
+
+    // Clear existing CAP dropdowns
+    container.querySelectorAll(".cap-ship-wrapper").forEach(wrapper => wrapper.remove());
+    capDropdownCounter = 0;
+
+    // Find CAP ships from assignments
+    const capShips = ships.filter(s => s.type === "CAP" && s.ship && s.ship.trim() !== "");
+
+    if (capShips.length === 0) {
+        // Show "No CAP ships" message
+        const emptyMsg = document.getElementById("aar-cap-empty");
+        if (emptyMsg) emptyMsg.classList.remove("hidden");
+    } else {
+        // Add a dropdown for each CAP ship
+        capShips.forEach(capShip => {
+            addCAPShipDropdown(capShip.ship);
+        });
+    }
+}
+
+/**
+ * Gets all selected CAP ships as an array
+ *
+ * @returns {Array<string>} Array of selected CAP ship names
+ */
+function getSelectedCAPShips() {
+    const container = document.getElementById("aar-cap-container");
+    if (!container) return [];
+
+    const capShips = [];
+    container.querySelectorAll(".cap-ship-wrapper").forEach(wrapper => {
+        const valueEl = wrapper.querySelector(".custom-select-value");
+        if (valueEl && valueEl.textContent !== "Select CAP ship...") {
+            capShips.push(valueEl.textContent);
+        }
+    });
+    return capShips;
+}
+
+/**
+ * Clears all CAP ship dropdowns
+ */
+function clearCAPShips() {
+    const container = document.getElementById("aar-cap-container");
+    if (!container) return;
+
+    container.querySelectorAll(".cap-ship-wrapper").forEach(wrapper => wrapper.remove());
+    capDropdownCounter = 0;
+
+    const emptyMsg = document.getElementById("aar-cap-empty");
+    if (emptyMsg) emptyMsg.classList.remove("hidden");
 }
 
 // ============================================================================
@@ -1342,23 +1596,42 @@ function initializeAARPOISelect() {
 /**
  * Generates the AAR preview text from all form inputs
  * Collects data from all AAR form fields and formats it into a structured report
+ * Only includes fields that have values (skips empty fields)
  * Updates the preview element with the generated text
  */
 function generateAARPreview() {
-    let aar = "SHIPS USED\n\n";
+    let aar = "";
 
-    // Ships
+    // Helper function to add a line only if value is not empty
+    const addLine = (label, value) => {
+        if (value && value.trim() !== "") {
+            return `${label}: ${value}\n`;
+        }
+        return "";
+    };
+
+    // Ships section
     const gunship = document.getElementById("aar-gunship-value").textContent;
+    const gunshipValue = gunship !== "Select ship..." ? gunship : "";
     const medical = document.getElementById("aar-medical-value").textContent;
-    const capShips = document.getElementById("aar-cap-ships").value;
+    const medicalValue = medical !== "Select ship..." ? medical : "";
+    const capShipsArray = getSelectedCAPShips();
+    const capShipsText = capShipsArray.length > 0 ? capShipsArray.join(", ") : "";
     const additionalShips = document.getElementById("aar-additional-ships").value;
     const reason = document.getElementById("aar-reason").value;
 
-    aar += `Gunship: ${gunship !== "Select ship..." ? gunship : ""}\n`;
-    aar += `Medical: ${medical !== "Select ship..." ? medical : ""}\n`;
-    aar += `CAP: ${capShips}\n`;
-    aar += `Additional Ships: ${additionalShips}\n`;
-    aar += `Reason: ${reason}\n\n`;
+    let shipsSection = "";
+    shipsSection += addLine("Gunship", gunshipValue);
+    shipsSection += addLine("Medical", medicalValue);
+    if (capShipsArray.length > 0) {
+        shipsSection += `CAP (${capShipsArray.length}): ${capShipsText}\n`;
+    }
+    shipsSection += addLine("Additional Ships", additionalShips);
+    shipsSection += addLine("Reason", reason);
+
+    if (shipsSection) {
+        aar += "SHIPS USED\n\n" + shipsSection + "\n";
+    }
 
     // Intersystem Response
     const intersystem = document.getElementById("aar-intersystem-toggle").checked;
@@ -1366,8 +1639,7 @@ function generateAARPreview() {
         aar += "INTERSYSTEM RESPONSE\n\n";
     }
 
-    // Location
-    aar += "LOCATION\n\n";
+    // Location section
     let planet = document.getElementById("aar-planet-value").textContent;
     const planetOther = document.getElementById("aar-planet-other").value;
     let locationType = document.getElementById("aar-location-type-value").textContent;
@@ -1378,39 +1650,57 @@ function generateAARPreview() {
     // Use custom input if "Other" is selected
     if (planet === "Other" && planetOther) {
         planet = planetOther;
+    } else if (planet === "Select planetary body...") {
+        planet = "";
     }
     if ((locationType === "Other" || locationType === "Other (specify below)") && locationTypeOther) {
         locationType = locationTypeOther;
+    } else if (locationType === "Select type...") {
+        locationType = "";
     }
     if ((poi === "Other" || poi === "Other (specify below)") && poiOther) {
         poi = poiOther;
+    } else if (poi === "Select POI...") {
+        poi = "";
     }
 
-    aar += `Planetary Body: ${planet !== "Select planetary body..." ? planet : ""}\n`;
-    aar += `Location Type: ${locationType !== "Select type..." ? locationType : ""}\n`;
-    aar += `Specific POI: ${poi !== "Select POI..." ? poi : ""}\n\n`;
+    let locationSection = "";
+    locationSection += addLine("Planetary Body", planet);
+    locationSection += addLine("Location Type", locationType);
+    locationSection += addLine("Specific POI", poi);
 
-    // Timestamps
-    aar += "TIMESTAMPS\n\n";
+    if (locationSection) {
+        aar += "LOCATION\n\n" + locationSection + "\n";
+    }
+
+    // Timestamps section
     const alert = document.getElementById("aar-alert").value;
     const depart = document.getElementById("aar-depart").value;
     const client = document.getElementById("aar-client").value;
     const rtb = document.getElementById("aar-rtb").value;
 
-    aar += `Alert:${alert} | Depart:${depart} | Client:${client} | RTB:${rtb}\n\n`;
+    // Only include timestamps if at least one has a meaningful value
+    const hasTimestamps = (alert && alert !== "00") || depart || client || rtb;
+    if (hasTimestamps) {
+        aar += "TIMESTAMPS\n\n";
+        aar += `Alert:${alert || "00"} | Depart:${depart} | Client:${client} | RTB:${rtb}\n\n`;
+    }
 
-    // Encounters
-    aar += "ENCOUNTERS\n\n";
+    // Encounters section
     const pve = document.getElementById("aar-pve").value;
     const pvp = document.getElementById("aar-pvp").value;
     const actions = document.getElementById("aar-actions").value;
 
-    aar += `PVE: ${pve}\n`;
-    aar += `PVP: ${pvp}\n`;
-    aar += `Actions Taken: ${actions}\n\n`;
+    let encountersSection = "";
+    encountersSection += addLine("PVE", pve);
+    encountersSection += addLine("PVP", pvp);
+    encountersSection += addLine("Actions Taken", actions);
 
-    // Issues
-    aar += "ISSUES\n\n";
+    if (encountersSection) {
+        aar += "ENCOUNTERS\n\n" + encountersSection + "\n";
+    }
+
+    // Issues section
     const issueCheckboxes = document.querySelectorAll(".aar-issue-checkbox:checked");
     const issues = Array.from(issueCheckboxes)
         .map(cb => cb.value)
@@ -1418,16 +1708,23 @@ function generateAARPreview() {
     const otherIssues = document.getElementById("aar-other-issues").value;
     const fix = document.getElementById("aar-fix").value;
 
-    aar += `Problems: ${issues}${otherIssues ? (issues ? ", " : "") + otherIssues : ""}\n`;
-    aar += `Brief Fix: ${fix}\n\n`;
+    const allProblems = issues + (otherIssues ? (issues ? ", " : "") + otherIssues : "");
 
-    // Summary
-    aar += "SUMMARY\n\n";
+    let issuesSection = "";
+    issuesSection += addLine("Problems", allProblems);
+    issuesSection += addLine("Brief Fix", fix);
+
+    if (issuesSection) {
+        aar += "ISSUES\n\n" + issuesSection + "\n";
+    }
+
+    // Summary section
     const summary = document.getElementById("aar-summary").value;
-    aar += `${summary}\n\n`;
+    if (summary && summary.trim() !== "") {
+        aar += "SUMMARY\n\n" + summary + "\n\n";
+    }
 
-    // Result
-    aar += "RESULT\n\n";
+    // Result section
     const outcome = document.getElementById("aar-outcome").value;
     let extractedTo = document.getElementById("aar-extracted-value").textContent;
     const extractedOther = document.getElementById("aar-extracted-other").value;
@@ -1438,9 +1735,7 @@ function generateAARPreview() {
     // Use custom input if "Other" is selected
     if (extractedTo === "Other" && extractedOther) {
         extractedTo = extractedOther;
-    }
-    // Don't show placeholder text
-    if (extractedTo === "Select...") {
+    } else if (extractedTo === "Select...") {
         extractedTo = "";
     }
 
@@ -1449,21 +1744,27 @@ function generateAARPreview() {
         challenges = challengesOther;
     }
 
-    aar += `Mission Outcome: ${outcome}\n`;
-    // Only show "Client Extracted To" if outcome is Success
-    if (outcome === "Success") {
-        aar += `Client Extracted To: ${extractedTo}\n`;
+    let resultSection = "";
+    resultSection += addLine("Mission Outcome", outcome);
+    // Only show "Client Extracted To" if outcome is Success and has value
+    if (outcome === "Success" && extractedTo) {
+        resultSection += addLine("Client Extracted To", extractedTo);
     }
-    aar += `Challenges: ${challenges}\n`;
-    aar += `Failure/Abort Reason: ${failure}\n\n`;
+    resultSection += addLine("Challenges", challenges);
+    resultSection += addLine("Failure/Abort Reason", failure);
 
-    // Notes
-    aar += "NOTES:\n\n";
+    if (resultSection) {
+        aar += "RESULT\n\n" + resultSection + "\n";
+    }
+
+    // Notes section
     const notes = document.getElementById("aar-notes").value;
-    aar += notes;
+    if (notes && notes.trim() !== "") {
+        aar += "NOTES:\n\n" + notes;
+    }
 
-    // Update preview
-    document.getElementById("aar-preview").textContent = aar;
+    // Update preview (show placeholder if empty)
+    document.getElementById("aar-preview").textContent = aar || "Fill in the form fields to generate your AAR...";
 }
 
 // ============================================================================
@@ -1534,8 +1835,10 @@ function clearAAR() {
     document.getElementById("aar-extracted-value").textContent = "Select...";
     document.getElementById("aar-location-type-value").textContent = "Select type...";
 
+    // Reset CAP dropdowns
+    clearCAPShips();
+
     // Reset all inputs
-    document.getElementById("aar-cap-ships").value = "";
     document.getElementById("aar-additional-ships").value = "";
     document.getElementById("aar-reason").value = "";
     document.getElementById("aar-planet-other").value = "";

@@ -71,6 +71,256 @@ Object.entries(EMOJIS.shipTypes).forEach(([type, emoji]) => {
 });
 
 // ============================================================================
+// CREW MEMBER CACHING (localStorage) - Discord ID <-> Name associations
+// ============================================================================
+
+/**
+ * localStorage key for cached crew members (Discord ID -> Name mapping)
+ * @type {string}
+ */
+const CREW_CACHE_STORAGE_KEY = "mrs_crew_cache";
+
+/**
+ * Maximum number of cached crew members to store
+ * @type {number}
+ */
+const MAX_CACHED_CREW = 100;
+
+/**
+ * Loads cached crew members from localStorage.
+ *
+ * @function getCachedCrewMembers
+ * @returns {Array<{discordId: string, name: string}>} Array of cached crew members
+ */
+function getCachedCrewMembers() {
+    try {
+        const stored = localStorage.getItem(CREW_CACHE_STORAGE_KEY);
+        if (stored) {
+            const data = JSON.parse(stored);
+            // Handle migration from old format (string array) to new format (object array)
+            if (Array.isArray(data) && data.length > 0 && typeof data[0] === "string") {
+                // Old format - just names, migrate to new format
+                return data.map(name => ({ discordId: "", name }));
+            }
+            return data;
+        }
+    } catch (e) {
+        console.warn("Failed to load cached crew members:", e);
+    }
+    return [];
+}
+
+/**
+ * Saves cached crew members to localStorage.
+ *
+ * @function saveCachedCrewMembers
+ * @param {Array<{discordId: string, name: string}>} members - Array of crew members to save
+ */
+function saveCachedCrewMembers(members) {
+    try {
+        localStorage.setItem(CREW_CACHE_STORAGE_KEY, JSON.stringify(members));
+    } catch (e) {
+        console.warn("Failed to save cached crew members:", e);
+    }
+}
+
+/**
+ * Caches a crew member's Discord ID and name association.
+ * If either field is provided, updates or creates the association.
+ *
+ * @function cacheCrewMember
+ * @param {string} discordId - The Discord ID
+ * @param {string} name - The crew member's name
+ */
+function cacheCrewMember(discordId, name) {
+    const trimmedId = (discordId || "").trim();
+    const trimmedName = (name || "").trim();
+
+    // Need at least one field to cache
+    if (!trimmedId && !trimmedName) return;
+
+    try {
+        let members = getCachedCrewMembers();
+
+        // Find existing entry by Discord ID (primary key)
+        const existingIndex = trimmedId
+            ? members.findIndex(m => m.discordId === trimmedId)
+            : -1;
+
+        if (existingIndex >= 0) {
+            // Update existing entry and move to front
+            const existing = members.splice(existingIndex, 1)[0];
+            if (trimmedName) existing.name = trimmedName;
+            members.unshift(existing);
+        } else if (trimmedId && trimmedName) {
+            // New entry with both fields
+            members.unshift({ discordId: trimmedId, name: trimmedName });
+        } else if (trimmedName) {
+            // Name only - check if name exists without ID
+            const nameIndex = members.findIndex(
+                m => !m.discordId && m.name.toLowerCase() === trimmedName.toLowerCase()
+            );
+            if (nameIndex >= 0) {
+                // Move existing name-only entry to front
+                const existing = members.splice(nameIndex, 1)[0];
+                members.unshift(existing);
+            } else {
+                // Add new name-only entry
+                members.unshift({ discordId: "", name: trimmedName });
+            }
+        }
+
+        // Limit to max cached members
+        if (members.length > MAX_CACHED_CREW) {
+            members = members.slice(0, MAX_CACHED_CREW);
+        }
+
+        saveCachedCrewMembers(members);
+        updateCrewNameDatalist();
+    } catch (e) {
+        console.warn("Failed to cache crew member:", e);
+    }
+}
+
+/**
+ * Looks up a cached name by Discord ID.
+ *
+ * @function getCachedNameByDiscordId
+ * @param {string} discordId - The Discord ID to look up
+ * @returns {string|null} The cached name, or null if not found
+ */
+function getCachedNameByDiscordId(discordId) {
+    if (!discordId || discordId.trim() === "") return null;
+
+    const members = getCachedCrewMembers();
+    const member = members.find(m => m.discordId === discordId.trim());
+    return member ? member.name : null;
+}
+
+/**
+ * Gets all unique cached names for autocomplete.
+ *
+ * @function getCachedCrewNames
+ * @returns {string[]} Array of unique names
+ */
+function getCachedCrewNames() {
+    const members = getCachedCrewMembers();
+    const names = members
+        .map(m => m.name)
+        .filter(name => name && name.trim() !== "");
+    // Return unique names preserving order
+    return [...new Set(names)];
+}
+
+/**
+ * Updates all crew name datalists with cached names.
+ *
+ * @function updateCrewNameDatalist
+ */
+function updateCrewNameDatalist() {
+    const datalist = document.getElementById("crew-name-suggestions");
+    if (!datalist) return;
+
+    const names = getCachedCrewNames();
+    datalist.innerHTML = names.map(name => `<option value="${name}">`).join("");
+}
+
+/**
+ * Initializes the crew name datalist on page load.
+ *
+ * @function initializeCrewNameCache
+ */
+function initializeCrewNameCache() {
+    // Create datalist element if it doesn't exist
+    if (!document.getElementById("crew-name-suggestions")) {
+        const datalist = document.createElement("datalist");
+        datalist.id = "crew-name-suggestions";
+        document.body.appendChild(datalist);
+    }
+    updateCrewNameDatalist();
+}
+
+// Initialize crew name cache on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", initializeCrewNameCache);
+
+/**
+ * Updates or adds a Discord ID -> Name association in the cache.
+ * Can be called from browser console to fix incorrect associations.
+ *
+ * @function updateCachedName
+ * @param {string} discordId - The Discord ID
+ * @param {string} newName - The correct name
+ * @example updateCachedName("640123456789", "CorrectName")
+ */
+function updateCachedName(discordId, newName) {
+    if (!discordId || discordId.trim() === "") {
+        console.error("Discord ID is required");
+        return;
+    }
+    cacheCrewMember(discordId.trim(), newName);
+    console.log(`Updated: ${discordId} → "${newName}"`);
+}
+
+/**
+ * Removes a Discord ID from the cache entirely.
+ * Can be called from browser console.
+ *
+ * @function removeCachedCrewMember
+ * @param {string} discordId - The Discord ID to remove
+ * @example removeCachedCrewMember("640123456789")
+ */
+function removeCachedCrewMember(discordId) {
+    if (!discordId || discordId.trim() === "") {
+        console.error("Discord ID is required");
+        return;
+    }
+    try {
+        let members = getCachedCrewMembers();
+        const before = members.length;
+        members = members.filter(m => m.discordId !== discordId.trim());
+        if (members.length < before) {
+            saveCachedCrewMembers(members);
+            updateCrewNameDatalist();
+            console.log(`Removed Discord ID: ${discordId}`);
+        } else {
+            console.log(`Discord ID not found in cache: ${discordId}`);
+        }
+    } catch (e) {
+        console.error("Failed to remove cached crew member:", e);
+    }
+}
+
+/**
+ * Clears the entire crew cache.
+ * Can be called from browser console.
+ *
+ * @function clearCrewCache
+ * @example clearCrewCache()
+ */
+function clearCrewCache() {
+    localStorage.removeItem(CREW_CACHE_STORAGE_KEY);
+    updateCrewNameDatalist();
+    console.log("Crew cache cleared");
+}
+
+/**
+ * Lists all cached crew members in a table format.
+ * Can be called from browser console.
+ *
+ * @function listCachedCrew
+ * @example listCachedCrew()
+ */
+function listCachedCrew() {
+    const members = getCachedCrewMembers();
+    if (members.length === 0) {
+        console.log("No cached crew members");
+        return;
+    }
+    console.table(members);
+    console.log(`Total: ${members.length} cached crew members`);
+}
+
+// ============================================================================
 // SHIP MANAGEMENT FUNCTIONS
 // ============================================================================
 
@@ -334,6 +584,7 @@ function updateCrewPosition(shipId, crewId, position) {
 /**
  * Updates the name of a crew member.
  * Note: Name is optional and doesn't affect preview.
+ * Caches the name with its associated Discord ID for future autocomplete.
  *
  * @function updateCrewName
  * @param {number} shipId - The unique ID of the ship
@@ -346,6 +597,8 @@ function updateCrewName(shipId, crewId, name) {
         const crew = ship.crew.find(c => c.id === crewId);
         if (crew) {
             crew.name = name;
+            // Cache the Discord ID -> Name association
+            cacheCrewMember(crew.discordId, name);
             // Name doesn't affect preview, so no need to updatePreview()
         }
     }
@@ -353,6 +606,8 @@ function updateCrewName(shipId, crewId, name) {
 
 /**
  * Updates the Discord ID of a crew member.
+ * If a cached name exists for this Discord ID and the name field is empty,
+ * auto-fills the name from cache.
  *
  * @function updateCrewDiscordId
  * @param {number} shipId - The unique ID of the ship
@@ -365,6 +620,19 @@ function updateCrewDiscordId(shipId, crewId, discordId) {
         const crew = ship.crew.find(c => c.id === crewId);
         if (crew) {
             crew.discordId = discordId;
+
+            // Check if we have a cached name for this Discord ID
+            const cachedName = getCachedNameByDiscordId(discordId);
+            if (cachedName && (!crew.name || crew.name.trim() === "")) {
+                // Auto-fill the name from cache
+                crew.name = cachedName;
+                // Re-render to update the UI
+                renderShips();
+            }
+
+            // Cache the association (updates existing or creates new)
+            cacheCrewMember(discordId, crew.name);
+
             updatePreview();
         }
     }
@@ -571,10 +839,17 @@ function renderShips() {
 
         ship.crew.forEach(crew => {
             const crewDiv = document.createElement("div");
-            crewDiv.className = "crew-member flex flex-wrap cursor-move items-center gap-2 rounded-lg border border-gray-700 bg-mrs-bg p-2 shadow-sm";
+            crewDiv.className = "crew-member flex flex-wrap items-center gap-2 rounded-lg border border-gray-700 bg-mrs-bg p-2 shadow-sm";
             crewDiv.draggable = true;
             crewDiv.dataset.crewId = crew.id;
             crewDiv.innerHTML = `
+                <!-- Drag Handle -->
+                <div class="drag-handle flex-shrink-0 cursor-grab active:cursor-grabbing px-1 py-2 text-gray-500 hover:text-gray-300 transition" title="Drag to reorder">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
+                    </svg>
+                </div>
+
                 <!-- Position Select (Manual) -->
                 <select onchange="updateCrewPosition(${ship.id}, ${
                 crew.id
@@ -592,22 +867,27 @@ function renderShips() {
                         .join("")}
                 </select>
 
-                <!-- Name Input -->
+                <!-- Name Input (with autocomplete from cached names) -->
                 <input type="text" placeholder="Name (optional)"
                        value="${crew.name || ""}"
                        onchange="updateCrewName(${ship.id}, ${crew.id}, this.value)"
+                       list="crew-name-suggestions"
+                       autocomplete="off"
+                       draggable="false"
                        class="hidden w-36 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:italic placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:block">
 
                 <!-- Discord ID Input -->
                 <input type="text" placeholder="Discord ID (e.g., 640...)"
                        value="${crew.discordId}"
                        onchange="updateCrewDiscordId(${ship.id}, ${crew.id}, this.value)"
+                       draggable="false"
                        class="flex-1 min-w-[150px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:flex-none md:w-48">
 
                 <!-- Comment Input -->
                 <input type="text" placeholder="Comment (e.g., Turret)"
                        value="${crew.comment || ""}"
                        onchange="updateCrewComment(${ship.id}, ${crew.id}, this.value)"
+                       draggable="false"
                        class="flex-1 min-w-[150px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition placeholder:italic placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
 
                 <!-- Remove Crew Button -->
@@ -632,25 +912,57 @@ function renderShips() {
 // ============================================================================
 
 /**
+ * Closes all custom select dropdowns.
+ * Called before drag operations to prevent z-index conflicts.
+ *
+ * @function closeAllDropdowns
+ */
+function closeAllDropdowns() {
+    document.querySelectorAll(".custom-select-dropdown").forEach(dropdown => {
+        dropdown.classList.add("hidden");
+        const wrapper = dropdown.closest(".custom-select-wrapper");
+        if (wrapper) {
+            const trigger = wrapper.querySelector(".custom-select-trigger");
+            const arrow = wrapper.querySelector(".custom-select-arrow");
+            if (trigger) {
+                trigger.classList.remove("ring-1", "ring-primary-500", "border-primary-500");
+            }
+            if (arrow) {
+                arrow.classList.remove("rotate-180");
+            }
+        }
+    });
+}
+
+/**
  * Handles the start of a drag operation for a crew member.
- * Prevents dragging when the target is an input or select element.
  *
  * @function handleDragStart
  * @param {DragEvent} e - The drag start event
  */
 function handleDragStart(e) {
-    // Check if the event target is an input or select
-    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") {
-        e.preventDefault();
-        return;
-    }
-    draggedElement = e.target.closest(".crew-member");
-    if (!draggedElement) return;
+    // Close all dropdowns to prevent z-index conflicts
+    closeAllDropdowns();
 
-    draggedShipId = parseInt(draggedElement.closest(".crew-list").dataset.shipId);
+    // Use currentTarget - the element the listener is attached to (the crew-member div)
+    // This is more reliable than e.target.closest() which can pick wrong elements
+    draggedElement = e.currentTarget;
+    if (!draggedElement || !draggedElement.classList.contains("crew-member")) return;
+
+    // Store the crew ID in dataTransfer for reliable retrieval
+    const crewId = draggedElement.dataset.crewId;
+    const shipId = draggedElement.closest(".crew-list").dataset.shipId;
+
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", JSON.stringify({ crewId, shipId }));
+
+    draggedShipId = parseInt(shipId);
+
     // Use setTimeout to allow the browser to render the drag image
     setTimeout(() => {
-        draggedElement.classList.add("dragging");
+        if (draggedElement) {
+            draggedElement.classList.add("dragging");
+        }
     }, 0);
 }
 
@@ -687,40 +999,66 @@ function handleDragOver(e) {
  */
 function handleDrop(e) {
     e.preventDefault();
-    if (!draggedElement) return;
+    e.stopPropagation();
 
-    const targetElement = e.target.closest(".crew-member");
-    if (targetElement && targetElement !== draggedElement) {
-        const targetShipId = parseInt(targetElement.closest(".crew-list").dataset.shipId);
-        const draggedShip = ships.find(s => s.id === draggedShipId);
-        const targetShip = ships.find(s => s.id === targetShipId);
-
-        const draggedCrewId = parseInt(draggedElement.dataset.crewId);
-        const targetCrewId = parseInt(targetElement.dataset.crewId);
-
-        if (draggedShipId === targetShipId) {
-            // Reordering within the same ship
-            const draggedIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
-            const targetIndex = draggedShip.crew.findIndex(c => c.id === targetCrewId);
-
-            // Swap positions
-            [draggedShip.crew[draggedIndex], draggedShip.crew[targetIndex]] = [draggedShip.crew[targetIndex], draggedShip.crew[draggedIndex]];
-        } else {
-            // Moving crew member to a different ship
-            const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
-            const targetCrewIndex = targetShip.crew.findIndex(c => c.id === targetCrewId);
-
-            // Remove from original ship
-            const crewMember = draggedShip.crew.splice(draggedCrewIndex, 1)[0];
-
-            // Insert into target ship at target position
-            targetShip.crew.splice(targetCrewIndex, 0, crewMember);
-        }
-
-        // No position update needed, numbers are sticky
-        renderShips();
-        updatePreview();
+    // Get dragged data from dataTransfer (more reliable than global variable)
+    let draggedCrewId, draggedShipIdFromData;
+    try {
+        const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+        draggedCrewId = parseFloat(data.crewId);
+        draggedShipIdFromData = parseInt(data.shipId);
+    } catch {
+        // Fallback to global variable
+        if (!draggedElement) return;
+        draggedCrewId = parseFloat(draggedElement.dataset.crewId);
+        draggedShipIdFromData = draggedShipId;
     }
+
+    // Use currentTarget for the drop target (the element with the listener)
+    const targetElement = e.currentTarget;
+    if (!targetElement || !targetElement.classList.contains("crew-member")) return;
+
+    const targetCrewId = parseFloat(targetElement.dataset.crewId);
+
+    // Don't drop on self
+    if (draggedCrewId === targetCrewId) return;
+
+    const targetShipId = parseInt(targetElement.closest(".crew-list").dataset.shipId);
+    const draggedShip = ships.find(s => s.id === draggedShipIdFromData);
+    const targetShip = ships.find(s => s.id === targetShipId);
+
+    if (!draggedShip || !targetShip) return;
+
+    if (draggedShipIdFromData === targetShipId) {
+        // Reordering within the same ship
+        const draggedIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+        const targetIndex = draggedShip.crew.findIndex(c => c.id === targetCrewId);
+
+        if (draggedIndex === -1 || targetIndex === -1) return;
+
+        // Swap positions
+        [draggedShip.crew[draggedIndex], draggedShip.crew[targetIndex]] = [draggedShip.crew[targetIndex], draggedShip.crew[draggedIndex]];
+    } else {
+        // Moving crew member to a different ship
+        const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+        const targetCrewIndex = targetShip.crew.findIndex(c => c.id === targetCrewId);
+
+        if (draggedCrewIndex === -1) return;
+
+        // Remove from original ship
+        const crewMember = draggedShip.crew.splice(draggedCrewIndex, 1)[0];
+
+        // Insert into target ship at target position
+        targetShip.crew.splice(targetCrewIndex, 0, crewMember);
+    }
+
+    // Clean up and re-render
+    if (draggedElement) {
+        draggedElement.classList.remove("dragging");
+        draggedElement = null;
+    }
+    renderShips();
+    updatePreview();
 }
 
 /**
@@ -732,29 +1070,47 @@ function handleDrop(e) {
  */
 function handleDropOnEmptyList(e) {
     e.preventDefault();
-    if (!draggedElement) return;
 
     // Only handle if dropped on the crew list itself, not on a crew member
-    if (e.target.classList.contains("crew-list")) {
-        const targetShipId = parseInt(e.target.dataset.shipId);
-        const draggedShip = ships.find(s => s.id === draggedShipId);
-        const targetShip = ships.find(s => s.id === targetShipId);
+    if (!e.target.classList.contains("crew-list")) return;
 
-        // Only move if dragging to a different ship
-        if (draggedShipId !== targetShipId) {
-            const draggedCrewId = parseInt(draggedElement.dataset.crewId);
-            const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+    // Get dragged data from dataTransfer
+    let draggedCrewId, draggedShipIdFromData;
+    try {
+        const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+        draggedCrewId = parseFloat(data.crewId);
+        draggedShipIdFromData = parseInt(data.shipId);
+    } catch {
+        // Fallback to global variable
+        if (!draggedElement) return;
+        draggedCrewId = parseFloat(draggedElement.dataset.crewId);
+        draggedShipIdFromData = draggedShipId;
+    }
 
-            // Remove from original ship
-            const crewMember = draggedShip.crew.splice(draggedCrewIndex, 1)[0];
+    const targetShipId = parseInt(e.target.dataset.shipId);
+    const draggedShip = ships.find(s => s.id === draggedShipIdFromData);
+    const targetShip = ships.find(s => s.id === targetShipId);
 
-            // Add to end of target ship
-            targetShip.crew.push(crewMember);
+    if (!draggedShip || !targetShip) return;
 
-            // No position update needed
-            renderShips();
-            updatePreview();
+    // Only move if dragging to a different ship
+    if (draggedShipIdFromData !== targetShipId) {
+        const draggedCrewIndex = draggedShip.crew.findIndex(c => c.id === draggedCrewId);
+        if (draggedCrewIndex === -1) return;
+
+        // Remove from original ship
+        const crewMember = draggedShip.crew.splice(draggedCrewIndex, 1)[0];
+
+        // Add to end of target ship
+        targetShip.crew.push(crewMember);
+
+        // Clean up and re-render
+        if (draggedElement) {
+            draggedElement.classList.remove("dragging");
+            draggedElement = null;
         }
+        renderShips();
+        updatePreview();
     }
 }
 
@@ -916,12 +1272,11 @@ function importFromDiscord() {
         renderShips();
         updatePreview();
 
-        showImportStatus("success", `Successfully imported ${parsedShips.length} ship(s) with ${parsedShips.reduce((sum, s) => sum + s.crew.length, 0)} crew member(s)!`);
+        // Close modal immediately
+        closeImportModal();
 
-        // Close modal after a brief delay to show success message
-        setTimeout(() => {
-            closeImportModal();
-        }, 1500);
+        // Show success banner above Ship Groups
+        showImportSuccessBanner(`Successfully imported ${parsedShips.length} ship(s) with ${parsedShips.reduce((sum, s) => sum + s.crew.length, 0)} crew member(s)!`);
     } catch (error) {
         console.error("Import error:", error);
         showImportStatus("error", "Failed to parse message: " + error.message);
@@ -1041,7 +1396,7 @@ function parseDiscordMessage(message) {
                 id: Date.now() + Math.random(), // Unique ID
                 role: role,
                 position: position,
-                name: "",
+                name: getCachedNameByDiscordId(discordId) || "", // Auto-fill from cache
                 discordId: discordId,
                 comment: comment
             });
@@ -1122,6 +1477,28 @@ function closeImportModal() {
         if (statusEl) {
             statusEl.classList.add("hidden");
         }
+    }
+}
+
+/**
+ * Shows a success banner above the Ship Groups card.
+ * Banner auto-hides after 4 seconds.
+ *
+ * @function showImportSuccessBanner
+ * @param {string} message - The success message to display
+ */
+function showImportSuccessBanner(message) {
+    const banner = document.getElementById("import-success-banner");
+    const messageEl = document.getElementById("import-success-message");
+
+    if (banner && messageEl) {
+        messageEl.textContent = message;
+        banner.classList.remove("hidden");
+
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            banner.classList.add("hidden");
+        }, 4000);
     }
 }
 

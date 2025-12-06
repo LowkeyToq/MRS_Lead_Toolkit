@@ -72,6 +72,11 @@
         <!-- SHIP ASSIGNMENT TAB -->
         <div id="content-shipAssignment" class="tab-content">
 
+        <!-- Import Success Banner (hidden by default) -->
+        <div id="import-success-banner" class="mb-4 hidden rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white shadow-lg">
+            <span id="import-success-message">Successfully imported!</span>
+        </div>
+
         <!-- Ship Groups Card (Primary) -->
         <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
             <div class="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -83,7 +88,7 @@
                 </div>
             </div>
             <p class="mb-5 rounded-lg border border-blue-900 bg-blue-950/50 p-3 text-sm text-gray-300">
-                💡 <strong class="text-white">Position numbers (1-9)</strong> are optional and help the Team Lead track who has been in the team longest. Multiple people can have the same number. Drag crew members to reorder or move between ships.
+                💡 <strong class="text-white">Position numbers (1-9)</strong> are optional and help the Team Lead track who has been in the team longest. Multiple people can have the same number. Use the <span class="text-gray-400">⠿</span> grip icon to drag crew members between ships.
             </p>
             <div id="shipList" class="mb-5 flex flex-col gap-4"></div>
             <button class="rounded-lg border border-mrs-button bg-mrs-button px-5 py-2.5 text-sm font-medium text-white shadow-md transition hover:border-mrs-button-hover hover:bg-mrs-button-hover" onclick="addShip()">+ Add Ship Group</button>
@@ -151,10 +156,16 @@
                             </div>
                         </div>
 
-                        <!-- CAP -->
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-300">CAP Ships <span class="text-xs text-gray-400">(comma-separated if multiple)</span></label>
-                            <input type="text" id="aar-cap-ships" placeholder="e.g., Anvil Hornet, Aegis Sabre" class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                        <!-- CAP Ships Container -->
+                        <div class="md:col-span-2">
+                            <div class="mb-2 flex items-center justify-between">
+                                <label class="block text-sm font-medium text-gray-300">CAP Ships</label>
+                                <button type="button" onclick="addCAPShipDropdown()" class="rounded px-2 py-1 text-xs font-medium text-blue-300 transition hover:bg-gray-700 hover:text-blue-200">+ Add CAP</button>
+                            </div>
+                            <div id="aar-cap-container" class="flex flex-wrap gap-2">
+                                <!-- CAP dropdowns will be dynamically added here -->
+                                <span id="aar-cap-empty" class="text-sm text-gray-500 italic">No CAP ships assigned</span>
+                            </div>
                         </div>
 
                         <!-- Additional Ships -->
