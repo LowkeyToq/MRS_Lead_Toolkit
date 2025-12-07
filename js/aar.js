@@ -22,6 +22,236 @@
  * - SHIPS (Array) - Declared in constants.js
  */
 
+// ============================================================================
+// ALERT TIMER MODULE
+// ============================================================================
+
+/**
+ * Timer stages in order
+ * @type {Array<{id: string, label: string, buttonText: string, field: string|null}>}
+ */
+const TIMER_STAGES = [
+    { id: "idle", label: "Ready", buttonText: "Start Alert Timer", field: null },
+    { id: "alert", label: "Alert Started", buttonText: "Left Station", field: "aar-alert" },
+    { id: "depart", label: "En Route", buttonText: "Arrived at Client", field: "aar-depart" },
+    { id: "client", label: "On Scene", buttonText: "RTB", field: "aar-client" },
+    { id: "rtb", label: "Complete", buttonText: "Start Alert Timer", field: "aar-rtb" }
+];
+
+/**
+ * Current timer stage index
+ * @type {number}
+ */
+let timerStageIndex = 0;
+
+/**
+ * Timer start timestamp (ms since epoch)
+ * @type {number|null}
+ */
+let timerStartTime = null;
+
+/**
+ * Timer interval ID for updating display
+ * @type {number|null}
+ */
+let timerIntervalId = null;
+
+/**
+ * Shows a brief reminder message near the timer.
+ *
+ * @function showTimerReminder
+ * @param {string} message - The reminder message to display
+ * @param {number} duration - How long to show the reminder (ms)
+ */
+function showTimerReminder(message, duration = 4000) {
+    const reminder = document.getElementById("timer-reminder");
+    const reminderText = document.getElementById("timer-reminder-text");
+    if (!reminder || !reminderText) return;
+
+    reminderText.textContent = message;
+    reminder.classList.remove("hidden");
+
+    // Hide after duration
+    setTimeout(() => {
+        reminder.classList.add("hidden");
+    }, duration);
+}
+
+/**
+ * Advances the alert timer to the next stage.
+ * Records elapsed time in the appropriate AAR field.
+ *
+ * @function advanceAlertTimer
+ */
+function advanceAlertTimer() {
+    const currentStage = TIMER_STAGES[timerStageIndex];
+
+    if (timerStageIndex === 0) {
+        // Starting the timer
+        timerStartTime = Date.now();
+        timerStageIndex = 1;
+
+        // Set Alert field to 00
+        const alertField = document.getElementById("aar-alert");
+        if (alertField) alertField.value = "00";
+
+        // Start the display update interval (every 50ms for smooth centiseconds)
+        timerIntervalId = setInterval(updateTimerDisplay, 50);
+        updateTimerDisplay();
+
+        // Show reminder to update channel status
+        showTimerReminder("🚨 Update channel status to ACTIVE ALERT!", 5000);
+    } else if (timerStageIndex < TIMER_STAGES.length - 1) {
+        // Advancing to next stage
+        timerStageIndex++;
+        const newStage = TIMER_STAGES[timerStageIndex];
+
+        // Calculate elapsed minutes
+        const elapsedMs = Date.now() - timerStartTime;
+        const elapsedMinutes = Math.floor(elapsedMs / 60000);
+
+        // Fill in the AAR field for this stage
+        if (newStage.field) {
+            const field = document.getElementById(newStage.field);
+            if (field) {
+                field.value = elapsedMinutes.toString();
+                // Trigger change event for AAR preview update
+                field.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        }
+
+        // If this was the last stage (RTB), show reminder and reset after a delay
+        if (timerStageIndex === TIMER_STAGES.length - 1) {
+            // Show reminder to update channel status
+            showTimerReminder("✅ Update channel status to STANDBY!", 5000);
+
+            setTimeout(() => {
+                resetAlertTimer();
+            }, 2000);
+        }
+    }
+
+    updateTimerButton();
+    updateTimerDisplay();
+    generateAARPreview();
+}
+
+/**
+ * Resets the alert timer to idle state.
+ *
+ * @function resetAlertTimer
+ * @param {boolean} clearTimestamps - Whether to also clear AAR timestamps
+ */
+function resetAlertTimer(clearTimestamps = false) {
+    if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+    }
+    timerStageIndex = 0;
+    timerStartTime = null;
+
+    // Clear AAR timestamp fields if requested
+    if (clearTimestamps) {
+        document.getElementById("aar-alert").value = "00";
+        document.getElementById("aar-depart").value = "";
+        document.getElementById("aar-client").value = "";
+        document.getElementById("aar-rtb").value = "";
+        generateAARPreview();
+    }
+
+    updateTimerButton();
+    updateTimerDisplay();
+}
+
+/**
+ * Confirms and resets the alert timer, warning about AAR timestamp clearing.
+ * Called by the Reset button in the UI.
+ *
+ * @function confirmResetAlertTimer
+ */
+function confirmResetAlertTimer() {
+    // If timer hasn't started, just reset without warning
+    if (!timerStartTime) {
+        resetAlertTimer(false);
+        return;
+    }
+
+    const message = "Reset the timer?\n\nThis will also clear the AAR timestamp fields (Alert, Depart, Client, RTB).";
+
+    if (confirm(message)) {
+        resetAlertTimer(true);
+    }
+}
+
+/**
+ * Updates the timer button text based on current stage.
+ *
+ * @function updateTimerButton
+ */
+function updateTimerButton() {
+    const button = document.getElementById("alert-timer-button");
+    if (!button) return;
+
+    const stage = TIMER_STAGES[timerStageIndex];
+    button.textContent = stage.buttonText;
+
+    // Update button styling based on stage
+    button.className = "w-full rounded-lg px-6 py-4 text-lg font-bold transition ";
+
+    if (timerStageIndex === 0) {
+        // Idle - green start button
+        button.className += "bg-green-600 hover:bg-green-700 text-white border border-green-500";
+    } else if (timerStageIndex === TIMER_STAGES.length - 1) {
+        // Complete - brief success state
+        button.className += "bg-blue-600 text-white border border-blue-500 cursor-default";
+    } else {
+        // Active stages - orange/amber
+        button.className += "bg-amber-600 hover:bg-amber-700 text-white border border-amber-500";
+    }
+}
+
+/**
+ * Updates the timer display showing elapsed time and current stage.
+ * Format: MM:SS:cs (minutes:seconds:centiseconds)
+ *
+ * @function updateTimerDisplay
+ */
+function updateTimerDisplay() {
+    const display = document.getElementById("alert-timer-display");
+    const stageLabel = document.getElementById("alert-timer-stage");
+    if (!display) return;
+
+    if (timerStartTime) {
+        const elapsedMs = Date.now() - timerStartTime;
+        const totalSeconds = Math.floor(elapsedMs / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const centiseconds = Math.floor((elapsedMs % 1000) / 10);
+        display.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}:${centiseconds.toString().padStart(2, "0")}`;
+    } else {
+        display.textContent = "00:00:00";
+    }
+
+    if (stageLabel) {
+        const stage = TIMER_STAGES[timerStageIndex];
+        stageLabel.textContent = stage.label;
+    }
+}
+
+/**
+ * Initializes the alert timer on page load.
+ *
+ * @function initializeAlertTimer
+ */
+function initializeAlertTimer() {
+    updateTimerButton();
+    updateTimerDisplay();
+}
+
+// ============================================================================
+// LOCATION DATA
+// ============================================================================
+
 /**
  * Database containing all location information (systems, planets, moons, stations, etc.)
  * @type {Object|null}
@@ -705,8 +935,9 @@ function populateAARShipDropdowns() {
     const medshipAssignment = ships.find(s => s.type === "Medship" && s.ship && s.ship.trim() !== "");
 
     // Populate Gunship and Medical dropdowns with pre-selection
-    populateAARShipDropdown("aar-gunship", uniqueShips, gunshipAssignment?.ship || null);
-    populateAARShipDropdown("aar-medical", uniqueShips, medshipAssignment?.ship || null);
+    // Medical includes "None" option for when Gunship doubles as Medical
+    populateAARShipDropdown("aar-gunship", uniqueShips, gunshipAssignment?.ship || null, false);
+    populateAARShipDropdown("aar-medical", uniqueShips, medshipAssignment?.ship || null, true);
 
     // Populate CAP dropdowns from CAP ships in assignments
     populateCAPFromAssignments();
@@ -720,7 +951,7 @@ function populateAARShipDropdowns() {
  * @param {Array<string>} assignedShips - Array of ship names from current assignments
  * @param {string|null} preselectedShip - Optional ship name to pre-select
  */
-function populateAARShipDropdown(selectId, assignedShips, preselectedShip = null) {
+function populateAARShipDropdown(selectId, assignedShips, preselectedShip = null, includeNone = false) {
     const optionsContainer = document.getElementById(selectId + "-options");
     if (!optionsContainer) {
         console.warn("Options container not found for:", selectId);
@@ -728,6 +959,12 @@ function populateAARShipDropdown(selectId, assignedShips, preselectedShip = null
     }
 
     let options = "";
+
+    // Add "None" option if requested (useful for Medical when Gunship doubles as Medical)
+    if (includeNone) {
+        options += `<div class="custom-select-option cursor-pointer px-3 py-2 text-sm text-gray-400 italic hover:bg-mrs-button hover:text-white" data-value="None">None (Gunship doubles as Medical)</div>`;
+        options += '<div class="border-t border-gray-600 my-1"></div>';
+    }
 
     // Add assigned ships first if any
     if (assignedShips.length > 0) {
@@ -1614,7 +1851,8 @@ function generateAARPreview() {
     const gunship = document.getElementById("aar-gunship-value").textContent;
     const gunshipValue = gunship !== "Select ship..." ? gunship : "";
     const medical = document.getElementById("aar-medical-value").textContent;
-    const medicalValue = medical !== "Select ship..." ? medical : "";
+    // Treat "None" and "Select ship..." as empty (no separate medical ship)
+    const medicalValue = (medical !== "Select ship..." && medical !== "None") ? medical : "";
     const capShipsArray = getSelectedCAPShips();
     const capShipsText = capShipsArray.length > 0 ? capShipsArray.join(", ") : "";
     const additionalShips = document.getElementById("aar-additional-ships").value;
