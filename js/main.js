@@ -15,6 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize Team Management module
     initializeTeamManagement();
 
+    // Initialize alert timer visibility
+    updateAlertTimerVisibility();
+
     // Initialize Ships API - fetch ship list from API
     initializeShips();
 

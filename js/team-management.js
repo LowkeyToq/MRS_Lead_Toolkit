@@ -10,7 +10,7 @@
  * @module team-management
  */
 
-// Session storage key
+// Local storage key (changed from session to persist across page reloads)
 const TEAM_MEMBERS_KEY = 'mrs_team_members';
 
 /**
@@ -26,20 +26,20 @@ function initializeTeamManagement() {
 }
 
 /**
- * Get all team members from session storage
+ * Get all team members from local storage
  * @returns {Array} Array of team member objects
  */
 function getTeamMembers() {
-    const membersJson = sessionStorage.getItem(TEAM_MEMBERS_KEY);
+    const membersJson = localStorage.getItem(TEAM_MEMBERS_KEY);
     return membersJson ? JSON.parse(membersJson) : [];
 }
 
 /**
- * Save team members to session storage
+ * Save team members to local storage
  * @param {Array} members - Array of team member objects
  */
 function saveTeamMembers(members) {
-    sessionStorage.setItem(TEAM_MEMBERS_KEY, JSON.stringify(members));
+    localStorage.setItem(TEAM_MEMBERS_KEY, JSON.stringify(members));
     updateTeamMemberDisplays();
 }
 
