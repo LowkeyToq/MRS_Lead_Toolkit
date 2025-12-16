@@ -14,7 +14,8 @@
 const SESSION_KEYS = {
     LEAD_NAME: 'mrs_lead_name',
     TEAM_POSITION: 'mrs_team_position',
-    NUMBER_OF_TEAMS: 'mrs_number_of_teams'
+    NUMBER_OF_TEAMS: 'mrs_number_of_teams',
+    ALERT_ACTIVE: 'mrs_alert_active'
 };
 
 /**
@@ -102,16 +103,24 @@ function setupHomeEventListeners() {
 function saveHomeData() {
     // Get values from inputs
     const leadName = document.getElementById('lead-name').value;
-    const teamPosition = document.getElementById('team-position').value;
-    const numberOfTeams = document.getElementById('number-of-teams').value;
+    const teamPosition = parseInt(document.getElementById('team-position').value);
+    const numberOfTeams = parseInt(document.getElementById('number-of-teams').value);
+
+    // Validate: Position should not exceed number of teams
+    let validPosition = teamPosition;
+    if (validPosition > numberOfTeams) {
+        validPosition = numberOfTeams;
+        // Update the dropdown to reflect the corrected position
+        document.getElementById('team-position').value = validPosition.toString();
+    }
 
     // Save to local storage
     localStorage.setItem(SESSION_KEYS.LEAD_NAME, leadName);
-    localStorage.setItem(SESSION_KEYS.TEAM_POSITION, teamPosition);
+    localStorage.setItem(SESSION_KEYS.TEAM_POSITION, validPosition.toString());
     localStorage.setItem(SESSION_KEYS.NUMBER_OF_TEAMS, numberOfTeams);
 
     // Update position display
-    updatePositionDisplay(teamPosition);
+    updatePositionDisplay(validPosition);
 
     // Show success message
     const successMessage = document.getElementById('save-success-message');
@@ -122,7 +131,7 @@ function saveHomeData() {
         }, 3000);
     }
 
-    console.log('Home data saved:', { leadName, teamPosition, numberOfTeams });
+    console.log('Home data saved:', { leadName, teamPosition: validPosition, numberOfTeams });
 }
 
 /**
@@ -189,6 +198,10 @@ function triggerAlarm() {
 
     // If we were at position 1, trigger special behavior
     if (wasAtPosition1) {
+        // Set alert as active
+        localStorage.setItem(SESSION_KEYS.ALERT_ACTIVE, 'true');
+        updateAlertTimerVisibility();
+        
         // Start alert timer
         if (typeof advanceAlertTimer === 'function') {
             advanceAlertTimer();
@@ -221,11 +234,33 @@ function getTeamPosition() {
 }
 
 /**
- * Get the number of teams
- * @returns {number} The number of teams in the system
+ * Check if alert is currently active
+ * @returns {boolean} Whether alert is active
  */
-function getNumberOfTeams() {
-    return parseInt(localStorage.getItem(SESSION_KEYS.NUMBER_OF_TEAMS) || '1');
+function isAlertActive() {
+    return localStorage.getItem(SESSION_KEYS.ALERT_ACTIVE) === 'true';
+}
+
+/**
+ * Deactivate alert (when timer resets or mission completes)
+ */
+function deactivateAlert() {
+    localStorage.setItem(SESSION_KEYS.ALERT_ACTIVE, 'false');
+    updateAlertTimerVisibility();
+}
+
+/**
+ * Update alert timer visibility on all tabs
+ */
+function updateAlertTimerVisibility() {
+    const alertTimerSection = document.getElementById('alert-timer-section');
+    if (alertTimerSection) {
+        if (isAlertActive()) {
+            alertTimerSection.classList.remove('hidden');
+        } else {
+            alertTimerSection.classList.add('hidden');
+        }
+    }
 }
 
 /**

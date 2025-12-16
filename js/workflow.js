@@ -6,9 +6,52 @@
  * - Step navigation
  * - Text copying to clipboard
  * - Copy notifications
+ * - Timer synchronization
  *
  * @module workflow
  */
+
+/**
+ * Timer update interval
+ * @type {number|null}
+ */
+let workflowTimerInterval = null;
+
+/**
+ * Update workflow timer display
+ */
+function updateWorkflowTimerDisplay() {
+    const timerDisplay = document.getElementById('workflow-timer-display');
+    const mainTimerDisplay = document.getElementById('alert-timer-display');
+    
+    if (timerDisplay && mainTimerDisplay) {
+        // Sync the workflow modal timer with the main timer
+        timerDisplay.textContent = mainTimerDisplay.textContent;
+    }
+}
+
+/**
+ * Start workflow timer sync
+ */
+function startWorkflowTimerSync() {
+    // Clear existing interval
+    if (workflowTimerInterval) {
+        clearInterval(workflowTimerInterval);
+    }
+    
+    // Update every 100ms for smooth sync
+    workflowTimerInterval = setInterval(updateWorkflowTimerDisplay, 100);
+}
+
+/**
+ * Stop workflow timer sync
+ */
+function stopWorkflowTimerSync() {
+    if (workflowTimerInterval) {
+        clearInterval(workflowTimerInterval);
+        workflowTimerInterval = null;
+    }
+}
 
 /**
  * Open the workflow modal
@@ -20,6 +63,8 @@ function openWorkflowModal() {
         modal.classList.add('flex');
         // Reset to step 1
         showWorkflowStep(1);
+        // Start syncing the timer
+        startWorkflowTimerSync();
     }
 }
 
@@ -31,6 +76,8 @@ function closeWorkflowModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        // Stop syncing the timer
+        stopWorkflowTimerSync();
     }
 }
 
@@ -57,8 +104,13 @@ function showWorkflowStep(stepNumber) {
  */
 function copyWorkflowText(action) {
     let textToCopy = '';
+    const timestamp = Math.floor(Date.now() / 1000);
     
     switch (action) {
+        case 'set-channel-status':
+            textToCopy = `<a:AlertBlue:1064652389711360043><a:AlertRed:985293780288700476><:AA1:1182246601557823520><:AA2:1182246604401561610><:AA3:1182246605718556682><:AA4:1182246607228514304><:AA5:1182246610189692938><:AA6:1182246613150859304><:AA7:1182246614665019393><:AA8:1182246617559072838><a:AlertRed:985293780288700476><a:AlertBlue:1064652389711360043><t:${timestamp}:R>`;
+            break;
+            
         case 'no-questionform':
             textToCopy = 'Hello! Once the questions have been answered we can proceed.';
             break;
