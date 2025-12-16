@@ -77,9 +77,7 @@ function closeStandByModal() {
  */
 function addTeamMember() {
     const input = document.getElementById('medrunner-name-input');
-    const roleSelect = document.getElementById('medrunner-role-input');
     const name = input.value.trim();
-    const role = roleSelect.value;
     
     if (!name) {
         alert('Please enter a medrunner name.');
@@ -90,13 +88,18 @@ function addTeamMember() {
     
     // Check if team is full (9 members including lead)
     // Lead (1) + 8 team members = 9 total
-    const isAtCapacity = members.length >= 8;
+    if (members.length >= 8) {
+        const warning = document.getElementById('team-warning');
+        if (warning) {
+            warning.classList.remove('hidden');
+        }
+        // Still allow adding, just show warning
+    }
     
     // Create new team member object
     const newMember = {
         id: Date.now(), // Unique ID
         name: name,
-        role: role,
         timestamp: Date.now(),
         dateAdded: new Date().toLocaleString('de-DE', {
             day: '2-digit',
@@ -119,16 +122,6 @@ function addTeamMember() {
     // Update the list in modal
     updateTeamMembersList();
     
-    // Show warning if at capacity, hide if under
-    const warning = document.getElementById('team-warning');
-    if (warning) {
-        if (members.length >= 8) {
-            warning.classList.remove('hidden');
-        } else {
-            warning.classList.add('hidden');
-        }
-    }
-    
     console.log('Team member added:', newMember);
 }
 
@@ -143,11 +136,9 @@ function removeTeamMember(memberId) {
     updateTeamMembersList();
     
     // Hide warning if we're back under limit
-    const warning = document.getElementById('team-warning');
-    if (warning) {
-        if (filteredMembers.length < 8) {
-            warning.classList.add('hidden');
-        }
+    if (filteredMembers.length < 8) {
+        const warning = document.getElementById('team-warning');
+        if (warning) warning.classList.add('hidden');
     }
 }
 
@@ -182,7 +173,7 @@ function updateTeamMembersList() {
             <div class="flex items-center justify-between gap-3 rounded-lg border border-gray-600 bg-gray-700/50 px-4 py-3">
                 <div class="flex-1">
                     <div class="font-medium text-white">${escapeHtml(member.name)}</div>
-                    <div class="text-xs text-gray-400">Role: ${escapeHtml(member.role || 'N/A')} | Added: ${member.dateAdded}</div>
+                    <div class="text-xs text-gray-400">Added: ${member.dateAdded}</div>
                 </div>
                 <button 
                     onclick="removeTeamMember(${member.id})"
@@ -227,13 +218,8 @@ function updateHomeTeamDisplay() {
             <div class="flex items-center justify-between gap-3 rounded-lg border border-gray-600 bg-gray-700/50 px-4 py-3">
                 <div class="flex-1">
                     <div class="font-medium text-white">${escapeHtml(member.name)}</div>
-                    <div class="text-xs text-gray-400">Role: ${escapeHtml(member.role || 'N/A')} | Added: ${member.dateAdded}</div>
+                    <div class="text-xs text-gray-400">Added: ${member.dateAdded}</div>
                 </div>
-                <button 
-                    onclick="removeTeamMember(${member.id})\"\n                    class="rounded-lg border border-red-700 bg-red-900/50 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-800 hover:text-white"
-                >
-                    Remove
-                </button>
             </div>
         `;
     });
@@ -258,24 +244,4 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-/**
- * Get team member by name
- * @param {string} name - The team member name
- * @returns {Object|null} The team member object or null if not found
- */
-function getTeamMemberByName(name) {
-    const members = getTeamMembers();
-    return members.find(m => m.name === name) || null;
-}
-
-/**
- * Get role for a team member by name
- * @param {string} name - The team member name
- * @returns {string} The role or empty string if not found
- */
-function getTeamMemberRole(name) {
-    const member = getTeamMemberByName(name);
-    return member ? (member.role || '') : '';
 }
