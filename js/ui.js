@@ -57,6 +57,16 @@ function switchTab(tabName) {
     activeTab.classList.add("active", "border-mrs-button", "text-white");
     activeTab.classList.remove("border-transparent", "text-gray-400");
 
+    // Show/hide alert timer based on tab (hide on home, show on others)
+    const alertTimerSection = document.getElementById("alert-timer-section");
+    if (alertTimerSection) {
+        if (tabName === "home") {
+            alertTimerSection.classList.add("hidden");
+        } else {
+            alertTimerSection.classList.remove("hidden");
+        }
+    }
+
     // If switching to AAR tab, populate ship dropdowns and re-initialize location dropdowns
     if (tabName === "aar") {
         populateAARShipDropdowns();

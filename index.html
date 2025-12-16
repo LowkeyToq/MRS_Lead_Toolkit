@@ -42,10 +42,31 @@
     <!-- Header Bar -->
     <div class="w-full bg-mrs-box border-b border-gray-700 p-4 shadow-lg">
         <div class="mx-auto max-w-7xl">
-            <h1 class="flex items-center gap-4 text-left font-mohave text-2xl font-semibold uppercase tracking-wide text-white">
-                <img src="https://staff.medrunner.space/images/medrunner-logo-stable-white.svg" alt="Medrunner Logo" class="h-12 w-auto">
-                <span>Medrunner Operations Tool</span>
-            </h1>
+            <div class="flex items-center justify-between">
+                <h1 class="flex items-center gap-4 text-left font-mohave text-2xl font-semibold uppercase tracking-wide text-white">
+                    <img src="https://staff.medrunner.space/images/medrunner-logo-stable-white.svg" alt="Medrunner Logo" class="h-12 w-auto">
+                    <span>Medrunner Operations Tool</span>
+                </h1>
+                <div class="flex items-center gap-4">
+                    <button 
+                        onclick="openStandByModal()"
+                        class="rounded-lg border-2 border-[#5f9ea0] bg-[#5f9ea0] px-6 py-3 text-base font-bold text-white shadow-lg transition hover:bg-[#4f8e90] hover:border-[#4f8e90] active:bg-[#3f7e80] leading-tight"
+                    >
+                        Medrunner in<br>Stand By
+                    </button>
+                    <button 
+                        id="alarm-button-header"
+                        onclick="triggerAlarm()"
+                        class="rounded-lg border-2 border-red-600 bg-red-600 px-6 py-3 text-lg font-bold uppercase text-white shadow-lg transition hover:bg-red-700 hover:border-red-700 active:bg-red-800"
+                    >
+                        🚨 Alarm
+                    </button>
+                    <div class="rounded-lg border border-gray-600 bg-gray-700 px-6 py-3">
+                        <span class="text-sm font-medium text-gray-300">Position:</span>
+                        <span id="current-position-display" class="ml-2 text-2xl font-bold text-white">1</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -53,7 +74,10 @@
     <div class="w-full bg-mrs-box border-b border-gray-700">
         <div class="mx-auto max-w-7xl px-4">
             <div class="flex gap-2">
-                <button onclick="switchTab('shipAssignment')" id="tab-shipAssignment" class="tab-button active border-b-2 border-mrs-button px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-gray-700">
+                <button onclick="switchTab('home')" id="tab-home" class="tab-button active border-b-2 border-mrs-button px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-gray-700">
+                    Home
+                </button>
+                <button onclick="switchTab('shipAssignment')" id="tab-shipAssignment" class="tab-button border-b-2 border-transparent px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-gray-400 transition hover:bg-gray-700 hover:text-white">
                     Ship Assignment
                 </button>
                 <button onclick="switchTab('aar')" id="tab-aar" class="tab-button border-b-2 border-transparent px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-gray-400 transition hover:bg-gray-700 hover:text-white">
@@ -69,8 +93,86 @@
     <!-- Main Content -->
     <div class="mx-auto max-w-7xl p-4 md:p-8">
 
-        <!-- Alert Timer (visible across all tabs) -->
-        <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-lg">
+        <!-- HOME TAB -->
+        <div id="content-home" class="tab-content">
+            <div class="mx-auto max-w-2xl rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
+                <h2 class="mb-6 text-center font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Team Lead Setup</h2>
+                
+                <!-- Name of the Lead -->
+                <div class="mb-6">
+                    <label for="lead-name" class="mb-2 block text-sm font-medium text-gray-300">Name of the Lead</label>
+                    <input 
+                        type="text" 
+                        id="lead-name" 
+                        placeholder="Enter lead name..."
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                </div>
+
+                <!-- Current Position of the Team -->
+                <div class="mb-6">
+                    <label for="team-position" class="mb-2 block text-sm font-medium text-gray-300">Current Position of the Team</label>
+                    <select 
+                        id="team-position"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+
+                <!-- Number of Teams in System -->
+                <div class="mb-6">
+                    <label for="number-of-teams" class="mb-2 block text-sm font-medium text-gray-300">Number of Teams of your System</label>
+                    <select 
+                        id="number-of-teams"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+
+                <!-- Save Button -->
+                <div class="mt-8">
+                    <button 
+                        onclick="saveHomeData()"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-8 py-4 text-lg font-bold uppercase text-white shadow-lg transition hover:bg-green-700 hover:border-green-700 active:bg-green-800"
+                    >
+                        💾 Save
+                    </button>
+                    <div id="save-success-message" class="mt-3 hidden rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white">
+                        ✅ Saved successfully!
+                    </div>
+                </div>
+
+                <!-- Team Members List -->
+                <div id="home-team-list" class="mt-8">
+                    <h3 class="mb-4 font-mohave text-xl font-semibold uppercase tracking-wide text-white">Current Team</h3>
+                    <div id="home-team-members" class="space-y-2">
+                        <p class="text-sm text-gray-400 italic">No team members added yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END HOME TAB -->
+
+        <!-- Alert Timer (hidden on Home tab) -->
+        <div id="alert-timer-section" class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-lg hidden">
             <div class="flex flex-col items-center gap-4 md:flex-row md:justify-between">
                 <div class="flex items-center gap-4">
                     <div class="text-center">
@@ -96,7 +198,7 @@
         </div>
 
         <!-- SHIP ASSIGNMENT TAB -->
-        <div id="content-shipAssignment" class="tab-content">
+        <div id="content-shipAssignment" class="tab-content hidden">
 
         <!-- Import Success Banner (hidden by default) -->
         <div id="import-success-banner" class="mb-4 hidden rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white shadow-lg">
@@ -615,12 +717,104 @@
         </div>
     </div>
 
+    <!-- Medrunner Stand By Modal -->
+    <div id="standby-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-gray-700 bg-mrs-box p-6 shadow-xl">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Medrunner Stand By</h2>
+                <button onclick="closeStandByModal()" class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-700 hover:text-white">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Checklist (for single team) -->
+            <div id="standby-checklist-single" class="mb-6">
+                <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Checklist</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>Less than 9 People in the current Team</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>At the designated muster point.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>Necessary gear for duty.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>Respawn point is set to the current muster point?</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>"Can you load into the game and confirm you're having no issues?"</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Add Medrunner Form -->
+            <div class="mb-6 rounded-lg border border-gray-600 bg-gray-800/50 p-4">
+                <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-white">Add Team Member</h3>
+                <div class="mb-3">
+                    <label for="medrunner-name-input" class="mb-2 block text-sm font-medium text-gray-300">Medrunner Name</label>
+                    <input 
+                        type="text" 
+                        id="medrunner-name-input" 
+                        placeholder="Enter medrunner name..."
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                </div>
+                <div id="team-warning" class="mb-3 hidden rounded-lg bg-amber-600/90 px-4 py-3 text-center font-medium text-white">
+                    ⚠️ Caution: You should split the team!
+                </div>
+                <button 
+                    onclick="addTeamMember()"
+                    class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-3 text-base font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700 active:bg-green-800"
+                >
+                    💾 Add to Team
+                </button>
+            </div>
+
+            <!-- Current Team Members List -->
+            <div class="mb-4">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="font-mohave text-lg font-semibold uppercase tracking-wide text-white">Current Team Members</h3>
+                    <button 
+                        onclick="sortTeamMembers()"
+                        class="rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600"
+                    >
+                        🔄 Reload/Sort
+                    </button>
+                </div>
+                <div id="team-members-list" class="space-y-2">
+                    <p class="text-sm text-gray-400 italic">No team members added yet.</p>
+                </div>
+            </div>
+
+            <!-- Close Button -->
+            <div class="mt-6">
+                <button 
+                    onclick="closeStandByModal()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-6 py-3 text-base font-medium text-white transition hover:bg-gray-600"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Application JavaScript Modules -->
     <script src="js/constants.js"></script>
     <script src="js/ships-api.js"></script>
     <script src="js/ship-assignment.js"></script>
     <script src="js/aar.js"></script>
     <script src="js/tip-splitter.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/team-management.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
 </body>
