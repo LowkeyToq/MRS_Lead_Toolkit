@@ -6,52 +6,9 @@
  * - Step navigation
  * - Text copying to clipboard
  * - Copy notifications
- * - Timer synchronization
  *
  * @module workflow
  */
-
-/**
- * Timer update interval
- * @type {number|null}
- */
-let workflowTimerInterval = null;
-
-/**
- * Update workflow timer display
- */
-function updateWorkflowTimerDisplay() {
-    const timerDisplay = document.getElementById('workflow-timer-display');
-    const mainTimerDisplay = document.getElementById('alert-timer-display');
-    
-    if (timerDisplay && mainTimerDisplay) {
-        // Sync the workflow modal timer with the main timer
-        timerDisplay.textContent = mainTimerDisplay.textContent;
-    }
-}
-
-/**
- * Start workflow timer sync
- */
-function startWorkflowTimerSync() {
-    // Clear existing interval
-    if (workflowTimerInterval) {
-        clearInterval(workflowTimerInterval);
-    }
-    
-    // Update every 100ms for smooth sync
-    workflowTimerInterval = setInterval(updateWorkflowTimerDisplay, 100);
-}
-
-/**
- * Stop workflow timer sync
- */
-function stopWorkflowTimerSync() {
-    if (workflowTimerInterval) {
-        clearInterval(workflowTimerInterval);
-        workflowTimerInterval = null;
-    }
-}
 
 /**
  * Open the workflow modal
@@ -63,8 +20,6 @@ function openWorkflowModal() {
         modal.classList.add('flex');
         // Reset to step 1
         showWorkflowStep(1);
-        // Start syncing the timer
-        startWorkflowTimerSync();
     }
 }
 
@@ -76,8 +31,6 @@ function closeWorkflowModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        // Stop syncing the timer
-        stopWorkflowTimerSync();
     }
 }
 
