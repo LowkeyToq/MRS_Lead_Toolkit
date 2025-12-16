@@ -768,6 +768,18 @@
                         class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     >
                 </div>
+                <div class="mb-3">
+                    <label for="medrunner-role-input" class="mb-2 block text-sm font-medium text-gray-300">Role</label>
+                    <select 
+                        id="medrunner-role-input"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                        <option value="Pilot">Pilot</option>
+                        <option value="Lead">Lead</option>
+                        <option value="Medic">Medic</option>
+                        <option value="Security">Security</option>
+                    </select>
+                </div>
                 <div id="team-warning" class="mb-3 hidden rounded-lg bg-amber-600/90 px-4 py-3 text-center font-medium text-white">
                     ⚠️ Caution: You should split the team!
                 </div>
@@ -781,15 +793,7 @@
 
             <!-- Current Team Members List -->
             <div class="mb-4">
-                <div class="mb-3 flex items-center justify-between">
-                    <h3 class="font-mohave text-lg font-semibold uppercase tracking-wide text-white">Current Team Members</h3>
-                    <button 
-                        onclick="sortTeamMembers()"
-                        class="rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600"
-                    >
-                        🔄 Reload/Sort
-                    </button>
-                </div>
+                <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-white">Current Team Members</h3>
                 <div id="team-members-list" class="space-y-2">
                     <p class="text-sm text-gray-400 italic">No team members added yet.</p>
                 </div>
