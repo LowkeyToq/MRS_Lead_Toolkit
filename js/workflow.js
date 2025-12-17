@@ -13,7 +13,8 @@
 const WORKFLOW_DEFAULT_STEP = 1;
 const workflowState = {
     currentStep: WORKFLOW_DEFAULT_STEP,
-    minimized: false
+    minimized: false,
+    history: [] // Stack für Navigation history
 };
 
 /**
@@ -50,6 +51,7 @@ function closeWorkflowModal({ resetState = true } = {}) {
     if (resetState) {
         workflowState.currentStep = WORKFLOW_DEFAULT_STEP;
         workflowState.minimized = false;
+        workflowState.history = []; // Clear history when closing
         updateWorkflowMinimizedStepLabel(workflowState.currentStep);
     }
 }
@@ -59,6 +61,11 @@ function closeWorkflowModal({ resetState = true } = {}) {
  * @param {number} stepNumber - The step number to show (1, 2, 3, etc.)
  */
 function showWorkflowStep(stepNumber) {
+    // Add current step to history before moving to new step
+    if (stepNumber !== workflowState.currentStep) {
+        workflowState.history.push(workflowState.currentStep);
+    }
+    
     // Hide all steps
     document.querySelectorAll('.workflow-step').forEach(step => {
         step.classList.add('hidden');
@@ -120,6 +127,28 @@ function updateWorkflowMinimizedStepLabel(stepNumber) {
     const stepLabel = document.getElementById('workflow-minimized-step');
     if (stepLabel) {
         stepLabel.textContent = `Current step: ${stepNumber}`;
+    }
+}
+
+/**
+ * Go back to the previous workflow step in history
+ */
+function goWorkflowBack() {
+    if (workflowState.history.length > 0) {
+        const previousStep = workflowState.history.pop();
+        
+        // Hide all steps
+        document.querySelectorAll('.workflow-step').forEach(step => {
+            step.classList.add('hidden');
+        });
+        
+        // Show the previous step
+        const step = document.getElementById(`workflow-step-${previousStep}`);
+        if (step) {
+            step.classList.remove('hidden');
+            workflowState.currentStep = previousStep;
+            updateWorkflowMinimizedStepLabel(previousStep);
+        }
     }
 }
 
