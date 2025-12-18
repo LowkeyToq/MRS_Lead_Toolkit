@@ -231,6 +231,12 @@ function updateCrewNameDatalist() {
         teamMemberNames = teamMembers.map(m => m.name);
     }
     
+    // Also add the lead name from the lead-name input field
+    const leadNameInput = document.getElementById('lead-name');
+    if (leadNameInput && leadNameInput.value.trim()) {
+        teamMemberNames.push(leadNameInput.value.trim());
+    }
+    
     // Combine and deduplicate
     const allNames = [...new Set([...teamMemberNames, ...cachedNames])];
     
@@ -745,6 +751,16 @@ function updateCrewName(shipId, crewId, name) {
             // Cache the Discord ID -> Name association
             cacheCrewMember(crew.discordId, name);
             
+            // Check if name matches lead name for auto LEAD role assignment
+            const leadNameInput = document.getElementById('lead-name');
+            if (leadNameInput && leadNameInput.value.trim().toLowerCase() === name.toLowerCase()) {
+                crew.role = 'LEAD';
+                renderShips();
+                updatePreview();
+                saveShipAssignments();
+                return;
+            }
+            
             // Sync role AND Discord ID from team member if exists
             if (name && typeof getTeamMembers === 'function') {
                 const teamMembers = getTeamMembers();
@@ -763,7 +779,7 @@ function updateCrewName(shipId, crewId, name) {
                             discordInput.value = teamMember.discordId;
                         }
                     }
-                    renderShipList();
+                    renderShips();
                     updatePreview();
                 }
             }
@@ -1701,7 +1717,7 @@ function syncTeamMemberRoleToShips(memberName, newRole) {
     });
     
     if (updated) {
-        renderShipList();
+        renderShips();
         updatePreview();
         saveShipAssignments();
     }
@@ -1727,7 +1743,7 @@ function syncTeamMemberDiscordIdToShips(memberName, discordId) {
     });
     
     if (updated) {
-        renderShipList();
+        renderShips();
         updatePreview();
         saveShipAssignments();
     }

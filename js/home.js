@@ -51,6 +51,17 @@ function initializeHome() {
 
     // Set up event listeners for auto-save (removed to require explicit save)
     // Event listeners now only update UI, not storage
+    
+    // Add event listener for lead name changes to update datalist
+    const leadNameInput = document.getElementById('lead-name');
+    if (leadNameInput) {
+        leadNameInput.addEventListener('input', function() {
+            // Update crew name datalist when lead name changes
+            if (typeof updateCrewNameDatalist === 'function') {
+                updateCrewNameDatalist();
+            }
+        });
+    }
 
     console.log("Home module - Ready!");
 }
