@@ -299,6 +299,37 @@ function handleExtractionToStation() {
 }
 
 /**
+ * Handle mission end: copy feedback message, show confirmation, advance timer to RTB, copy RTB status, and open AAR tab
+ */
+function handleMissionEnd() {
+    // First copy the end and feedback message
+    copyWorkflowText('chat-end-feedback');
+    
+    // Show confirmation dialog after a short delay to allow the copy notification to appear
+    setTimeout(() => {
+        if (confirm('Are you sure you wanna end the Mission? Please sent the End and Feedback text first to the Client before you confirm')) {
+            // Advance alert timer to RTB
+            if (typeof advanceAlertTimer === 'function') {
+                advanceAlertTimer();
+            }
+            
+            // Copy RTB channel status
+            setTimeout(() => {
+                copyWorkflowText('channel-rtb-status');
+                
+                // Open AAR tab and close workflow modal
+                setTimeout(() => {
+                    if (typeof switchTab === 'function') {
+                        switchTab('aar');
+                    }
+                    closeWorkflowModal();
+                }, 500);
+            }, 100);
+        }
+    }, 500);
+}
+
+/**
  * Copy workflow text to clipboard
  * @param {string} action - The action identifier
  */
@@ -378,6 +409,19 @@ function copyWorkflowText(action) {
         
         case 'chat-extraction-nearest-station':
             textToCopy = 'We will bring you safely to nearest Station. Please stay close to our team and do not go anywhere else, because it may pose a risk to your safety. The Team will bring you in the ship and will show you where to sit or lay down during the flight. Please do not leave this place during the flight or open your Mobiglass unless the team tells you to do so.\nWe will let you know when we arrive.';
+            break;
+        
+        case 'chat-arrived-station':
+            textToCopy = 'We arrived at the Station, you are good to go now. Please leave the ship.';
+            break;
+        
+        case 'chat-end-feedback':
+            textToCopy = 'As we conclude our service, we\'d like to sincerely thank you for trusting us. We hope today\'s response was prompt, professional, and met your expectations. Your health and satisfaction are our top priorities, and we hope to assist you again in the future if needed.\n\n If you have a moment, we\'d greatly appreciate it if you could leave a rating and comment on the alert card to let us know how we did today!';
+            break;
+        
+        case 'channel-rtb-status':
+            const rtbTimestamp = Math.floor(Date.now() / 1000);
+            textToCopy = `<:RTB1:1182246669564256296><:RTB2:1182246670717689867><:RTB3:1182246674383507476><:RTB4:1182246677101412392><:RTB5:1182246678397464596><:RTB6:1182246679680929803><:RTB7:1182246686177894430><:RTB8:1182246689336213575><t:${rtbTimestamp}:R>`;
             break;
         
         case 'chat-no-response-warning':
