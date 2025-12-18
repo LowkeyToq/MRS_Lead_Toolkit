@@ -213,7 +213,7 @@ function getCachedCrewNames() {
 }
 
 /**
- * Updates all crew name datalists with cached names.
+ * Updates all crew name datalists with cached names and team members.
  *
  * @function updateCrewNameDatalist
  */
@@ -221,8 +221,41 @@ function updateCrewNameDatalist() {
     const datalist = document.getElementById("crew-name-suggestions");
     if (!datalist) return;
 
-    const names = getCachedCrewNames();
-    datalist.innerHTML = names.map(name => `<option value="${name}">`).join("");
+    // Get cached crew names
+    const cachedNames = getCachedCrewNames();
+    
+    // Get team members from team management
+    let teamMemberNames = [];
+    if (typeof getTeamMembers === 'function') {
+        const teamMembers = getTeamMembers();
+        teamMemberNames = teamMembers.map(m => m.name);
+    }
+    
+    // Also add the lead name from the lead-name input field
+    const leadNameInput = document.getElementById('lead-name');
+    if (leadNameInput && leadNameInput.value.trim()) {
+        teamMemberNames.push(leadNameInput.value.trim());
+    }
+    
+    // Combine and deduplicate
+    let allNames = [...new Set([...teamMemberNames, ...cachedNames])];
+    
+    // Filter out names that are already assigned to ships
+    const assignedNames = new Set();
+    ships.forEach(ship => {
+        ship.crew.forEach(crew => {
+            if (crew.name && crew.name.trim()) {
+                assignedNames.add(crew.name.trim().toLowerCase());
+            }
+        });
+    });
+    
+    // Only show names that are not yet assigned
+    const availableNames = allNames.filter(name => 
+        !assignedNames.has(name.toLowerCase())
+    );
+    
+    datalist.innerHTML = availableNames.map(name => `<option value="${name}">`).join("");
 }
 
 /**
@@ -609,6 +642,7 @@ function addCrewMember(shipId) {
         renderShips();
         updatePreview();
         saveShipAssignments();
+        updateCrewNameDatalist(); // Update available names
     }
 }
 
@@ -651,11 +685,13 @@ function removeCrewMember(shipId, crewId) {
         renderShips();
         updatePreview();
         saveShipAssignments();
+        updateCrewNameDatalist(); // Update available names
     }
 }
 
 /**
  * Updates the role of a crew member.
+ * Also syncs the role back to team member if name matches.
  *
  * @function updateCrewRole
  * @param {number} shipId - The unique ID of the ship
@@ -668,6 +704,23 @@ function updateCrewRole(shipId, crewId, role) {
         const crew = ship.crew.find(c => c.id === crewId);
         if (crew) {
             crew.role = role;
+            
+            // Sync role back to team member if name matches
+            if (crew.name && typeof getTeamMembers === 'function') {
+                const teamMembers = getTeamMembers();
+                const teamMember = teamMembers.find(m => m.name.toLowerCase() === crew.name.toLowerCase());
+                if (teamMember && teamMember.role !== role) {
+                    // Update team member role directly without triggering sync back
+                    teamMember.role = role;
+                    localStorage.setItem('mrs_team_members', JSON.stringify(teamMembers));
+                    
+                    // Update home display
+                    if (typeof updateHomeTeamDisplay === 'function') {
+                        updateHomeTeamDisplay();
+                    }
+                }
+            }
+            
             updatePreview();
             saveShipAssignments();
         }
@@ -714,7 +767,43 @@ function updateCrewName(shipId, crewId, name) {
             crew.name = name;
             // Cache the Discord ID -> Name association
             cacheCrewMember(crew.discordId, name);
+            
+            // Check if name matches lead name for auto LEAD role assignment
+            const leadNameInput = document.getElementById('lead-name');
+            if (leadNameInput && leadNameInput.value.trim().toLowerCase() === name.toLowerCase()) {
+                crew.role = 'LEAD';
+                renderShips();
+                updatePreview();
+                saveShipAssignments();
+                updateCrewNameDatalist(); // Update available names
+                return;
+            }
+            
+            // Sync role AND Discord ID from team member if exists
+            if (name && typeof getTeamMembers === 'function') {
+                const teamMembers = getTeamMembers();
+                const teamMember = teamMembers.find(m => m.name.toLowerCase() === name.toLowerCase());
+                if (teamMember) {
+                    // Sync role
+                    if (teamMember.role) {
+                        crew.role = teamMember.role;
+                    }
+                    // Sync Discord ID
+                    if (teamMember.discordId) {
+                        crew.discordId = teamMember.discordId;
+                        // Update the Discord ID input field in UI
+                        const discordInput = document.querySelector(`input[data-crew-id="${crewId}"][data-discord-field="true"]`);
+                        if (discordInput) {
+                            discordInput.value = teamMember.discordId;
+                        }
+                    }
+                    renderShips();
+                    updatePreview();
+                }
+            }
+            
             saveShipAssignments();
+            updateCrewNameDatalist(); // Update available names
             // Name doesn't affect preview, so no need to updatePreview()
         }
     }
@@ -981,8 +1070,10 @@ function renderShips() {
                 crew.id
             }, this.value)" class="flex-none min-w-[100px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
                     ${Object.keys(EMOJIS.roles)
+                        .filter(role => role !== 'LEAD')
                         .map(role => `<option value="${role}" ${crew.role === role ? "selected" : ""}>${role}</option>`)
                         .join("")}
+                    ${crew.role === 'LEAD' ? `<option value="LEAD" selected>LEAD</option>` : ''}
                 </select>
 
                 <!-- Name Input (with autocomplete from cached names) -->
@@ -1623,13 +1714,57 @@ function showImportSuccessBanner(message) {
     }
 }
 
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-// Load saved ship assignments from localStorage, or start fresh
-if (loadShipAssignments()) {
-    console.log("Ship assignments restored from cache");
+/**
+ * Syncs a team member's role to all ship assignments where they are assigned.
+ * Called when a team member's role is updated in the Home tab.
+ *
+ * @function syncTeamMemberRoleToShips
+ * @param {string} memberName - The name of the team member
+ * @param {string} newRole - The new role to apply
+ */
+function syncTeamMemberRoleToShips(memberName, newRole) {
+    if (!memberName) return;
+    
+    let updated = false;
+    ships.forEach(ship => {
+        ship.crew.forEach(crew => {
+            if (crew.name && crew.name.toLowerCase() === memberName.toLowerCase()) {
+                crew.role = newRole;
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        renderShips();
+        updatePreview();
+        saveShipAssignments();
+    }
 }
-renderShips();
-updatePreview();
+
+/**
+ * Sync a team member's Discord ID to all their ship assignments
+ * @function syncTeamMemberDiscordIdToShips
+ * @param {string} memberName - The name of the team member
+ * @param {string} discordId - The new Discord ID
+ */
+function syncTeamMemberDiscordIdToShips(memberName, discordId) {
+    if (!memberName) return;
+    
+    let updated = false;
+    ships.forEach(ship => {
+        ship.crew.forEach(crew => {
+            if (crew.name && crew.name.toLowerCase() === memberName.toLowerCase()) {
+                crew.discordId = discordId;
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        renderShips();
+        updatePreview();
+        saveShipAssignments();
+    }
+}
+

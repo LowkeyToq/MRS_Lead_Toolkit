@@ -42,10 +42,40 @@
     <!-- Header Bar -->
     <div class="w-full bg-mrs-box border-b border-gray-700 p-4 shadow-lg">
         <div class="mx-auto max-w-7xl">
-            <h1 class="flex items-center gap-4 text-left font-mohave text-2xl font-semibold uppercase tracking-wide text-white">
-                <img src="https://staff.medrunner.space/images/medrunner-logo-stable-white.svg" alt="Medrunner Logo" class="h-12 w-auto">
-                <span>Medrunner Operations Tool</span>
-            </h1>
+            <div class="flex items-center justify-between">
+                <h1 class="flex items-center gap-4 text-left font-mohave text-2xl font-semibold uppercase tracking-wide text-white">
+                    <img src="https://staff.medrunner.space/images/medrunner-logo-stable-white.svg" alt="Medrunner Logo" class="h-12 w-auto">
+                    <span>Operations Tool</span>
+                </h1>
+                <div class="flex items-center gap-4">
+                    <button 
+                        onclick="openStandByModal()"
+                        class="rounded-lg border-2 border-[#5f9ea0] bg-[#5f9ea0] px-6 py-3 text-base font-bold text-white shadow-lg transition hover:bg-[#4f8e90] hover:border-[#4f8e90] active:bg-[#3f7e80] leading-tight"
+                    >
+                        Medrunner in<br>Stand By
+                    </button>
+                    <button 
+                        id="alarm-button-header"
+                        onclick="triggerAlarm()"
+                        class="rounded-lg border-2 border-red-600 bg-red-600 px-6 py-3 text-lg font-bold uppercase text-white shadow-lg transition hover:bg-red-700 hover:border-red-700 active:bg-red-800"
+                    >
+                        🚨 Alarm
+                    </button>
+                    <button 
+                        onclick="copyPositionStatus()"
+                        class="rounded-lg border border-gray-600 bg-gray-700 px-6 py-3 transition hover:bg-gray-600 active:bg-gray-500 flex items-center gap-3"
+                        title="Click to copy position status"
+                    >
+                        <div>
+                            <span class="text-sm font-medium text-gray-300">Position:</span>
+                            <span id="current-position-display" class="ml-2 text-2xl font-bold text-white">1</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -53,7 +83,10 @@
     <div class="w-full bg-mrs-box border-b border-gray-700">
         <div class="mx-auto max-w-7xl px-4">
             <div class="flex gap-2">
-                <button onclick="switchTab('shipAssignment')" id="tab-shipAssignment" class="tab-button active border-b-2 border-mrs-button px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-gray-700">
+                <button onclick="switchTab('home')" id="tab-home" class="tab-button active border-b-2 border-mrs-button px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-gray-700">
+                    Home
+                </button>
+                <button onclick="switchTab('shipAssignment')" id="tab-shipAssignment" class="tab-button border-b-2 border-transparent px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-gray-400 transition hover:bg-gray-700 hover:text-white">
                     Ship Assignment
                 </button>
                 <button onclick="switchTab('aar')" id="tab-aar" class="tab-button border-b-2 border-transparent px-6 py-3 font-mohave text-sm font-semibold uppercase tracking-wide text-gray-400 transition hover:bg-gray-700 hover:text-white">
@@ -69,8 +102,8 @@
     <!-- Main Content -->
     <div class="mx-auto max-w-7xl p-4 md:p-8">
 
-        <!-- Alert Timer (visible across all tabs) -->
-        <div class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-lg">
+        <!-- Alert Timer (global) -->
+        <div id="alert-timer-section" class="mb-6 rounded-lg border border-gray-700 bg-mrs-box p-4 shadow-lg hidden">
             <div class="flex flex-col items-center gap-4 md:flex-row md:justify-between">
                 <div class="flex items-center gap-4">
                     <div class="text-center">
@@ -95,8 +128,86 @@
             </div>
         </div>
 
+        <!-- HOME TAB -->
+        <div id="content-home" class="tab-content">
+            <div class="mx-auto max-w-2xl rounded-lg border border-gray-700 bg-mrs-box p-5 shadow-lg md:p-6">
+                <h2 class="mb-6 text-center font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Team Lead Setup</h2>
+                
+                <!-- Name of the Lead -->
+                <div class="mb-6">
+                    <label for="lead-name" class="mb-2 block text-sm font-medium text-gray-300">Name of the Lead</label>
+                    <input 
+                        type="text" 
+                        id="lead-name" 
+                        placeholder="Enter lead name..."
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                </div>
+
+                <!-- Current Position of the Team -->
+                <div class="mb-6">
+                    <label for="team-position" class="mb-2 block text-sm font-medium text-gray-300">Current Position of the Team</label>
+                    <select 
+                        id="team-position"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+
+                <!-- Number of Teams in System -->
+                <div class="mb-6">
+                    <label for="number-of-teams" class="mb-2 block text-sm font-medium text-gray-300">Number of Teams of your System</label>
+                    <select 
+                        id="number-of-teams"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+
+                <!-- Save Button -->
+                <div class="mt-8">
+                    <button 
+                        onclick="saveHomeData()"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-8 py-4 text-lg font-bold uppercase text-white shadow-lg transition hover:bg-green-700 hover:border-green-700 active:bg-green-800"
+                    >
+                        💾 Save
+                    </button>
+                    <div id="save-success-message" class="mt-3 hidden rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white">
+                        ✅ Saved successfully!
+                    </div>
+                </div>
+
+                <!-- Team Members List -->
+                <div id="home-team-list" class="mt-8">
+                    <h3 class="mb-4 font-mohave text-xl font-semibold uppercase tracking-wide text-white">Current Team</h3>
+                    <div id="home-team-members" class="space-y-2">
+                        <p class="text-sm text-gray-400 italic">No team members added yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END HOME TAB -->
+
         <!-- SHIP ASSIGNMENT TAB -->
-        <div id="content-shipAssignment" class="tab-content">
+        <div id="content-shipAssignment" class="tab-content hidden">
 
         <!-- Import Success Banner (hidden by default) -->
         <div id="import-success-banner" class="mb-4 hidden rounded-lg bg-green-600 px-4 py-3 text-center font-medium text-white shadow-lg">
@@ -592,6 +703,19 @@
         <!-- END TIP SPLITTER TAB -->
     </div>
 
+    <!-- Lead Name Warning Modal -->
+    <div id="lead-name-warning-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-sm rounded-lg border border-amber-500 bg-mrs-box p-6 shadow-xl">
+            <div class="flex flex-col items-center gap-4 text-center">
+                <div class="text-lg font-semibold uppercase tracking-wide text-white">Lead Name benötigt</div>
+                <p class="text-sm text-gray-300">Bitte trage den Namen des Leads ein, bevor du speicherst oder den Alarm auslöst.</p>
+                <button onclick="hideLeadNameWarningModal()" class="rounded-lg border border-amber-500 bg-amber-500 px-5 py-2 text-sm font-semibold uppercase text-white transition hover:bg-amber-600">
+                    Verstanden
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import from Discord Modal -->
     <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
         <div class="w-full max-w-2xl rounded-lg border border-gray-700 bg-mrs-box p-6 shadow-xl">
@@ -615,12 +739,669 @@
         </div>
     </div>
 
+    <!-- Medrunner Stand By Modal -->
+    <div id="standby-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-gray-700 bg-mrs-box p-6 shadow-xl">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Medrunner Stand By</h2>
+                <button onclick="closeStandByModal()" class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-700 hover:text-white">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Checklist (for single team) -->
+            <div id="standby-checklist-single" class="mb-6">
+                <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-blue-300">Checklist</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>Less than 9 People in the current Team</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>At the designated muster point.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>Necessary gear for duty.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>Respawn point is set to the current muster point?</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-400">•</span>
+                        <span>"Can you load into the game and confirm you're having no issues?"</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Add Medrunner Form -->
+            <div class="mb-6 rounded-lg border border-gray-600 bg-gray-800/50 p-4">
+                <h3 class="mb-3 font-mohave text-lg font-semibold uppercase tracking-wide text-white">Add Team Member</h3>
+                <div class="mb-3">
+                    <label for="medrunner-name-input" class="mb-2 block text-sm font-medium text-gray-300">Medrunner Name</label>
+                    <input 
+                        type="text" 
+                        id="medrunner-name-input" 
+                        placeholder="Enter medrunner name..."
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                </div>
+                <div class="mb-3">
+                    <label for="medrunner-discord-input" class="mb-2 block text-sm font-medium text-gray-300">Discord ID</label>
+                    <input 
+                        type="text" 
+                        id="medrunner-discord-input" 
+                        placeholder="Enter Discord ID (e.g., 640...)"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                </div>
+                <div id="team-warning" class="mb-3 hidden rounded-lg bg-amber-600/90 px-4 py-3 text-center font-medium text-white">
+                    ⚠️ Caution: You should split the team!
+                </div>
+                <button 
+                    onclick="addTeamMember()"
+                    class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-3 text-base font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700 active:bg-green-800"
+                >
+                    💾 Add to Team
+                </button>
+            </div>
+
+            <!-- Close Button -->
+            <div class="mt-6">
+                <button 
+                    onclick="closeStandByModal()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-6 py-3 text-base font-medium text-white transition hover:bg-gray-600"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Modal -->
+    <div id="workflow-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-2xl rounded-lg border border-gray-700 bg-mrs-box p-6 shadow-xl">
+            <div class="mb-4 flex items-center justify-between">
+                <div class="flex-1">
+                    <h2 class="font-mohave text-2xl font-semibold uppercase tracking-wide text-white">Alert Workflow</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="minimizeWorkflowModal()" class="rounded-lg border border-gray-600 px-3 py-2 text-sm font-medium text-gray-300 transition hover:bg-gray-700 hover:text-white">
+                        Minimize
+                    </button>
+                    <button onclick="closeWorkflowModal()" class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-700 hover:text-white" title="Workflow schließen">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 1 -->
+            <div id="workflow-step-1" class="workflow-step">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 1</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Channel – Set Status Alarm</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="copyWorkflowText('channel-set-status-alarm'); showWorkflowStep(2);"
+                        class="w-full rounded-lg border border-purple-600 bg-purple-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-purple-700 hover:border-purple-700"
+                    >
+                        🔔 Channel – Set Status Alarm
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-4"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 2 -->
+            <div id="workflow-step-2" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 2</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Is there a Dispatcher?</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="showWorkflowStep(3);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        Without Dispatch
+                    </button>
+                    
+                    <button 
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-gray-600 opacity-75 cursor-not-allowed"
+                        disabled
+                    >
+                        With Dispatch (Currently no function WIP)
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 3 -->
+            <div id="workflow-step-3" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 3</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Check if Questions were Submited</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="showWorkflowStep(6);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        Questions Submited
+                    </button>
+                    
+                    <button 
+                        onclick="copyWorkflowText('chat-please-submit-questions'); setTimeout(() => showWorkflowStep(4), 100);"
+                        class="w-full rounded-lg border border-blue-600 bg-blue-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:border-blue-700"
+                    >
+                        💬 Chat – Please Submit Questions
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 4 -->
+            <div id="workflow-step-4" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 4</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">No Response Check</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="showWorkflowStep(6);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        Questions Submited
+                    </button>
+                    
+                    <button 
+                        onclick="copyWorkflowText('chat-no-response-5min'); setTimeout(() => showWorkflowStep(5), 100);"
+                        class="w-full rounded-lg border border-blue-600 bg-blue-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:border-blue-700"
+                    >
+                        💬 Chat – No Response after 5 Minutes
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 5 -->
+            <div id="workflow-step-5" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 5</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Final Check</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="showWorkflowStep(6);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        Question Submited
+                    </button>
+                    
+                    <button 
+                        onclick="handleStandDownWithConfirm();"
+                        class="w-full rounded-lg border border-red-700 bg-red-700 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-red-800 hover:border-red-800"
+                    >
+                        💬 Chat – Stand Down
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 6 -->
+            <div id="workflow-step-6" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 6</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Response Options</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="copyWorkflowText('chat-no-team-available');"
+                        class="w-full rounded-lg border border-blue-600 bg-blue-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:border-blue-700"
+                    >
+                        💬 Chat - No Team available
+                    </button>
+                    
+                    <button 
+                        onclick="handleServiceDenial();"
+                        class="w-full rounded-lg border border-red-600 bg-red-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-red-700 hover:border-red-700"
+                    >
+                        💬 Chat – Service Denial
+                    </button>
+                    
+                    <button 
+                        onclick="copyWorkflowText('chat-greetings'); setTimeout(() => showWorkflowStep(7), 100);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        💬 Chat - Greetings
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 7 -->
+            <div id="workflow-step-7" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 7</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Friend Request Status</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="copyWorkflowText('chat-friend-request'); setTimeout(() => showWorkflowStep(9), 100);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        💬 Chat - Friend Request
+                    </button>
+                    
+                    <button 
+                        onclick="copyWorkflowText('chat-no-response-warning'); setTimeout(() => showWorkflowStep(8), 100);"
+                        class="w-full rounded-lg border border-blue-600 bg-blue-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:border-blue-700"
+                    >
+                        💬 Chat – No Response
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 8 -->
+            <div id="workflow-step-8" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 8</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Client Check</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="showWorkflowStep(9);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        Client Response
+                    </button>
+                    
+                    <button 
+                        onclick="handleStandDownFromStep8();"
+                        class="w-full rounded-lg border border-red-700 bg-red-700 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-red-800 hover:border-red-800"
+                    >
+                        💬 Chat – Stand Down
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 9 -->
+            <div id="workflow-step-9" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 9</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Party Invite</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="copyWorkflowText('chat-party-invite'); setTimeout(() => showWorkflowStep(12), 100);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        💬 Chat – Party Invite
+                    </button>
+                    
+                    <button 
+                        onclick="showWorkflowStep(10);"
+                        class="w-full rounded-lg border border-orange-600 bg-orange-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-orange-700 hover:border-orange-700"
+                    >
+                        Issue with Invite
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 10 -->
+            <div id="workflow-step-10" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 10</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Invite Troubleshooting</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="copyWorkflowText('chat-check-key-binding'); setTimeout(() => showWorkflowStep(11), 100);"
+                        class="w-full rounded-lg border border-blue-600 bg-blue-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:border-blue-700"
+                    >
+                        💬 Chat – Check Key Binding
+                    </button>
+                    
+                    <button 
+                        onclick="copyWorkflowText('chat-no-response-warning'); setTimeout(() => showWorkflowStep(8), 100);"
+                        class="w-full rounded-lg border border-orange-600 bg-orange-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-orange-700 hover:border-orange-700"
+                    >
+                        💬 Chat – No Response
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 11 -->
+            <div id="workflow-step-11" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 11</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Party Invite Confirmation</p>
+                <div class="space-y-3">
+                    <button 
+                        onclick="copyWorkflowText('chat-party-invite'); setTimeout(() => showWorkflowStep(12), 100);"
+                        class="w-full rounded-lg border border-green-600 bg-green-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-green-700 hover:border-green-700"
+                    >
+                        💬 Chat – Party Invite
+                    </button>
+                    
+                    <button 
+                        onclick="copyWorkflowText('chat-bugged-spectrum');"
+                        class="w-full rounded-lg border border-red-600 bg-red-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-red-700 hover:border-red-700"
+                    >
+                        💬 Chat – Bugged Spectrum needed
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 12 -->
+            <div id="workflow-step-12" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 12</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Joining Server</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="copyWorkflowText('chat-joining-server'); setTimeout(() => showWorkflowStep(13), 100);"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Chat – Joining Server
+                    </button>
+                    <button
+                        onclick="copyWorkflowText('chat-server-full'); setTimeout(() => showWorkflowStep(13), 100);"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Chat - Server Full
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 13 -->
+            <div id="workflow-step-13" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 13</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Mission Status</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="handleLeftStation()"
+                        class="w-full rounded-lg border border-gray-600 bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+                    >
+                        Chat – Left Station and switch to Ingame Partychat
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 14 -->
+            <div id="workflow-step-14" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 14</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">En Route Update</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="copyWorkflowText('chat-closing-in'); setTimeout(() => showWorkflowStep(15), 100);"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Chat – Closing in
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 15 -->
+            <div id="workflow-step-15" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 15</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Arrival</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="handleArriveAtClient()"
+                        class="w-full rounded-lg border border-gray-600 bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+                    >
+                        Arrive at the Client
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 16 -->
+            <div id="workflow-step-16" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 16</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Extraction Decision</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="showWorkflowStep(17)"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Extraction Needed
+                    </button>
+                    <button
+                        onclick="showWorkflowStep(19)"
+                        class="w-full rounded-lg border border-gray-600 bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+                    >
+                        No extraction needed and Client safe → End of Mission
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 17 -->
+            <div id="workflow-step-17" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 17</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Extraction Planning</p>
+                <div class="space-y-3">
+                    <div>
+                        <label for="workflow-nearest-station" class="block text-sm font-medium text-gray-300 mb-2">
+                            Nearest Station
+                        </label>
+                        <input
+                            type="text"
+                            id="workflow-nearest-station"
+                            placeholder="Please fill in the Name of the nearest Station"
+                            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            onchange="saveNearestStation()"
+                        />
+                    </div>
+                    <button
+                        onclick="handleExtractionToStation()"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Chat – Extraction to nearest Station
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 18 -->
+            <div id="workflow-step-18" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 18</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Station Arrival</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="copyWorkflowText('chat-arrived-station'); setTimeout(() => showWorkflowStep(19), 100);"
+                        class="w-full rounded-lg border border-gray-600 bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+                    >
+                        Chat - We arrived at the Station
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <!-- Step 19 -->
+            <div id="workflow-step-19" class="workflow-step hidden">
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 19</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Mission Complete</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="handleMissionEnd()"
+                        class="w-full rounded-lg border border-gray-600 bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+                    >
+                        Chat – End and Feedback
+                    </button>
+                </div>
+                <button 
+                    onclick="goWorkflowBack()"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
+                >
+                    ← Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Minimized Bar -->
+    <div id="workflow-minimized" class="fixed bottom-4 left-4 z-50 hidden">
+        <div class="flex items-center gap-4 rounded-lg border border-gray-600 bg-mrs-box px-4 py-3 shadow-lg">
+            <div class="flex flex-col">
+                <span class="text-sm font-semibold uppercase tracking-wide text-white">Alert Workflow minimized</span>
+                <span id="workflow-minimized-step" class="text-xs text-gray-300">Current step: 1</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="restoreWorkflowModal()" class="rounded-lg border border-mrs-button bg-mrs-button px-3 py-2 text-xs font-semibold uppercase text-white transition hover:border-mrs-button-hover hover:bg-mrs-button-hover">
+                    Resume
+                </button>
+                <button onclick="closeWorkflowModal()" class="rounded-lg p-2 text-gray-400 transition hover:bg-gray-700 hover:text-white" title="Workflow schließen">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Notification (Bottom Right) -->
+    <div id="copy-notification" class="fixed bottom-4 right-4 z-50 hidden rounded-lg bg-green-600 px-6 py-3 text-white shadow-lg">
+        <div class="flex items-center gap-2">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="copy-notification-text">Copied to clipboard!</span>
+        </div>
+    </div>
+
+    <!-- Data Lists for Autocomplete -->
+    <datalist id="crew-name-suggestions"></datalist>
+
     <!-- Application JavaScript Modules -->
     <script src="js/constants.js"></script>
     <script src="js/ships-api.js"></script>
     <script src="js/ship-assignment.js"></script>
     <script src="js/aar.js"></script>
     <script src="js/tip-splitter.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/team-management.js"></script>
+    <script src="js/workflow.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
 </body>
