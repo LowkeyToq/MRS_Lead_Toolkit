@@ -257,6 +257,12 @@ function updateHomeTeamDisplay() {
                     <option value="SEC" ${member.role === 'SEC' ? 'selected' : ''}>SEC</option>
                     <option value="CAP" ${member.role === 'CAP' ? 'selected' : ''}>CAP</option>
                 </select>
+                <button 
+                    onclick="removeTeamMember(${member.id})"
+                    class="rounded-lg border border-red-700 bg-red-900/50 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-800 hover:text-white"
+                >
+                    Remove
+                </button>
             </div>
         `;
     });
@@ -293,7 +299,10 @@ function updateTeamMemberRole(memberId, newRole) {
     const member = members.find(m => m.id === memberId);
     if (member) {
         member.role = newRole;
-        saveTeamMembers(members);
+        localStorage.setItem(TEAM_MEMBERS_KEY, JSON.stringify(members));
+        
+        // Update all displays immediately
+        updateTeamMemberDisplays();
         
         // Update ship assignments if this person is assigned to any ship
         if (typeof syncTeamMemberRoleToShips === 'function') {

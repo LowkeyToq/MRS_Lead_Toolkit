@@ -683,11 +683,18 @@ function updateCrewRole(shipId, crewId, role) {
             crew.role = role;
             
             // Sync role back to team member if name matches
-            if (crew.name && typeof getTeamMembers === 'function' && typeof updateTeamMemberRole === 'function') {
+            if (crew.name && typeof getTeamMembers === 'function') {
                 const teamMembers = getTeamMembers();
                 const teamMember = teamMembers.find(m => m.name.toLowerCase() === crew.name.toLowerCase());
-                if (teamMember) {
-                    updateTeamMemberRole(teamMember.id, role);
+                if (teamMember && teamMember.role !== role) {
+                    // Update team member role directly without triggering sync back
+                    teamMember.role = role;
+                    localStorage.setItem('mrs_team_members', JSON.stringify(teamMembers));
+                    
+                    // Update home display
+                    if (typeof updateHomeTeamDisplay === 'function') {
+                        updateHomeTeamDisplay();
+                    }
                 }
             }
             
