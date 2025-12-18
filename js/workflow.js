@@ -408,7 +408,9 @@ function copyWorkflowText(action) {
             break;
         
         case 'chat-extraction-nearest-station':
-            textToCopy = 'We will bring you safely to nearest Station. Please stay close to our team and do not go anywhere else, because it may pose a risk to your safety. The Team will bring you in the ship and will show you where to sit or lay down during the flight. Please do not leave this place during the flight or open your Mobiglass unless the team tells you to do so.\nWe will let you know when we arrive.';
+            const nearestStationInput = document.getElementById('workflow-nearest-station');
+            const nearestStation = nearestStationInput?.value.trim() || 'nearest Station';
+            textToCopy = `We will bring you safely to ${nearestStation}. Please stay close to our team and do not go anywhere else, because it may pose a risk to your safety. The Team will bring you in the ship and will show you where to sit or lay down during the flight. Please do not leave this place during the flight or open your Mobiglass unless the team tells you to do so.\nWe will let you know when we arrive.`;
             break;
         
         case 'chat-arrived-station':
