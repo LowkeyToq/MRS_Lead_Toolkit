@@ -260,8 +260,8 @@ function showCopyNotification(message, isError = false) {
     // Show notification
     notification.classList.remove('hidden');
     
-    // Hide after 5 seconds
+    // Hide after 10 seconds
     setTimeout(() => {
         notification.classList.add('hidden');
-    }, 5000);
+    }, 10000);
 }
