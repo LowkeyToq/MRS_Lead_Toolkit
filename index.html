@@ -45,7 +45,7 @@
             <div class="flex items-center justify-between">
                 <h1 class="flex items-center gap-4 text-left font-mohave text-2xl font-semibold uppercase tracking-wide text-white">
                     <img src="https://staff.medrunner.space/images/medrunner-logo-stable-white.svg" alt="Medrunner Logo" class="h-12 w-auto">
-                    <span>Medrunner Operations Tool</span>
+                    <span>Operations Tool</span>
                 </h1>
                 <div class="flex items-center gap-4">
                     <button 
@@ -61,10 +61,19 @@
                     >
                         🚨 Alarm
                     </button>
-                    <div class="rounded-lg border border-gray-600 bg-gray-700 px-6 py-3">
-                        <span class="text-sm font-medium text-gray-300">Position:</span>
-                        <span id="current-position-display" class="ml-2 text-2xl font-bold text-white">1</span>
-                    </div>
+                    <button 
+                        onclick="copyPositionStatus()"
+                        class="rounded-lg border border-gray-600 bg-gray-700 px-6 py-3 transition hover:bg-gray-600 active:bg-gray-500 flex items-center gap-3"
+                        title="Click to copy position status"
+                    >
+                        <div>
+                            <span class="text-sm font-medium text-gray-300">Position:</span>
+                            <span id="current-position-display" class="ml-2 text-2xl font-bold text-white">1</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -781,6 +790,15 @@
                         class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     >
                 </div>
+                <div class="mb-3">
+                    <label for="medrunner-discord-input" class="mb-2 block text-sm font-medium text-gray-300">Discord ID</label>
+                    <input 
+                        type="text" 
+                        id="medrunner-discord-input" 
+                        placeholder="Enter Discord ID (e.g., 640...)"
+                        class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-gray-200 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                </div>
                 <div id="team-warning" class="mb-3 hidden rounded-lg bg-amber-600/90 px-4 py-3 text-center font-medium text-white">
                     ⚠️ Caution: You should split the team!
                 </div>
@@ -790,22 +808,6 @@
                 >
                     💾 Add to Team
                 </button>
-            </div>
-
-            <!-- Current Team Members List -->
-            <div class="mb-4">
-                <div class="mb-3 flex items-center justify-between">
-                    <h3 class="font-mohave text-lg font-semibold uppercase tracking-wide text-white">Current Team Members</h3>
-                    <button 
-                        onclick="sortTeamMembers()"
-                        class="rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600"
-                    >
-                        🔄 Reload/Sort
-                    </button>
-                </div>
-                <div id="team-members-list" class="space-y-2">
-                    <p class="text-sm text-gray-400 italic">No team members added yet.</p>
-                </div>
             </div>
 
             <!-- Close Button -->
@@ -1387,6 +1389,9 @@
             <span id="copy-notification-text">Copied to clipboard!</span>
         </div>
     </div>
+
+    <!-- Data Lists for Autocomplete -->
+    <datalist id="crew-name-suggestions"></datalist>
 
     <!-- Application JavaScript Modules -->
     <script src="js/constants.js"></script>
