@@ -272,6 +272,14 @@ function copyWorkflowText(action) {
             textToCopy = 'The Friend Request has bugged, this is a known problem. Please can you navigate to https://robertsspaceindustries.com/spectrum to accept the Friend Request.\n\nPlease confirm here once you have accepted it.';
             break;
         
+        case 'chat-joining-server':
+            textToCopy = 'Perfect! Our Team is joining your Server now. I will notify you when we are shortly arriving.';
+            break;
+        
+        case 'chat-server-full':
+            textToCopy = 'Our Team is joining your Server now. I will notify you when we are shortly arriving.\n Do note your server is full, there may be a short delay. I apologize for this in advance.';
+            break;
+        
         case 'chat-no-response-warning':
             textToCopy = 'Just as fair warning, if we haven\'t heard from you within the next 5 minutes, we will hope all is well and close this alert.';
             break;

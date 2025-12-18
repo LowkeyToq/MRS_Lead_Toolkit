@@ -1138,13 +1138,27 @@
 
             <!-- Step 12 -->
             <div id="workflow-step-12" class="workflow-step hidden">
-                <p class="mb-4 text-center text-lg font-medium text-white">Step 12</p>
-                <div class="space-y-3 min-h-[100px]"></div>
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 12</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Joining Server</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="copyWorkflowText('chat-joining-server'); setTimeout(() => showWorkflowStep(13), 100);"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Chat – Joining Server
+                    </button>
+                    <button
+                        onclick="copyWorkflowText('chat-server-full'); setTimeout(() => showWorkflowStep(13), 100);"
+                        class="w-full rounded-lg border border-gray-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                    >
+                        Chat - Server Full
+                    </button>
+                </div>
                 <button 
                     onclick="goWorkflowBack()"
-                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
                 >
-                    ← Zurück
+                    ← Back
                 </button>
             </div>
 
