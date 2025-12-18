@@ -1164,13 +1164,27 @@
 
             <!-- Step 13 -->
             <div id="workflow-step-13" class="workflow-step hidden">
-                <p class="mb-4 text-center text-lg font-medium text-white">Step 13</p>
-                <div class="space-y-3 min-h-[100px]"></div>
+                <p class="mb-2 text-center text-lg font-medium text-white">Step 13</p>
+                <p class="mb-4 text-center text-sm font-medium text-gray-400">Mission Status</p>
+                <div class="space-y-3">
+                    <button
+                        onclick="handleLeftStation()"
+                        class="w-full rounded-lg border border-gray-600 bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+                    >
+                        Chat – Left Station and switch to Ingame Partychat
+                    </button>
+                    <button
+                        onclick="handleMissionFailure()"
+                        class="w-full rounded-lg border border-gray-600 bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    >
+                        Chat – Failure with Feedback
+                    </button>
+                </div>
                 <button 
                     onclick="goWorkflowBack()"
-                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-600 mt-3"
                 >
-                    ← Zurück
+                    ← Back
                 </button>
             </div>
 

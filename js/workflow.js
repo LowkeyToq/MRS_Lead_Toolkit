@@ -215,6 +215,39 @@ function handleStandDownFromStep8() {
 }
 
 /**
+ * Handle left station: copy message, advance timer to "Left Station", navigate to Step 14
+ */
+function handleLeftStation() {
+    copyWorkflowText('chat-left-station');
+    
+    // Advance alert timer to "Left Station" stage
+    if (typeof advanceAlertTimer === 'function') {
+        advanceAlertTimer();
+    }
+    
+    setTimeout(() => {
+        showWorkflowStep(14);
+    }, 100);
+}
+
+/**
+ * Handle mission failure: copy message, show confirm dialog, mark as failure and reset timer
+ */
+function handleMissionFailure() {
+    if (confirm('Are you sure you want to end this mission as a failure?')) {
+        copyWorkflowText('chat-failure-feedback');
+        
+        if (typeof resetAlertTimer === 'function') {
+            resetAlertTimer(true);
+        }
+        
+        setTimeout(() => {
+            closeWorkflowModal();
+        }, 100);
+    }
+}
+
+/**
  * Copy workflow text to clipboard
  * @param {string} action - The action identifier
  */
@@ -252,7 +285,7 @@ function copyWorkflowText(action) {
             break;
         
         case 'chat-greetings':
-            const leadName = getLeadName() || 'Zeek';
+            let leadName = getLeadName() || 'Zeek';
             textToCopy = `Thank you for choosing Medrunner Services! My name is ${leadName}, and I'll be leading the team dispatched to your location. I will be sending you a friend request and/or party invite. (To accept the invite, make sure you're in first-person view and spam the key to the right of P — typically the [ key, though it may vary depending on your keyboard layout.) Please confirm here when you are ready to receive the invites!\n\nCould you please tell me if you need a Med Bed and if you need Extraction to the NEAREST Station.\nPlease let me know anytime during this operation if anything changes (for example your medical condition or dangers)`;
             break;
         
@@ -280,13 +313,21 @@ function copyWorkflowText(action) {
             textToCopy = 'Our Team is joining your Server now. I will notify you when we are shortly arriving.\n Do note your server is full, there may be a short delay. I apologize for this in advance.';
             break;
         
+        case 'chat-left-station':
+            textToCopy = 'Depending on the situation, we may not pick you up immediately. Please be patient while we secure the area. We will reach you soon. Switching over to in-game party chat now. Note: If you are downed, it will be harder to read until you are revived.';
+            break;
+        
+        case 'chat-failure-feedback':
+            textToCopy = 'As we conclude our service, we\'d like to sincerely thank you for trusting us. We\'re sorry that we were unable to rescue you this time. Your health and satisfaction are our top priorities, and we hope that we will be able to assist you in the future if needed. If you have a moment, we\'d greatly appreciate it if you could leave a rating and comment on the alert card to let us know how we handled your case today!';
+            break;
+        
         case 'chat-no-response-warning':
             textToCopy = 'Just as fair warning, if we haven\'t heard from you within the next 5 minutes, we will hope all is well and close this alert.';
             break;
             
         case 'without-dispatch':
-            const leadName = getLeadName() || 'Zeek';
-            textToCopy = `Thank you for choosing Medrunner Services! My name is ${leadName}, and I'll be leading the team dispatched to your location. I will be sending you a friend request and/or party invite. (To accept the invite, make sure you're in first-person view and spam the key to the right of P — typically the [ key, though it may vary depending on your keyboard layout.) Please confirm here when you are ready to receive the invites!`;
+            let leadNameDispatch = getLeadName() || 'Zeek';
+            textToCopy = `Thank you for choosing Medrunner Services! My name is ${leadNameDispatch}, and I'll be leading the team dispatched to your location. I will be sending you a friend request and/or party invite. (To accept the invite, make sure you're in first-person view and spam the key to the right of P — typically the [ key, though it may vary depending on your keyboard layout.) Please confirm here when you are ready to receive the invites!`;
             break;
             
         case 'client-no-react':
