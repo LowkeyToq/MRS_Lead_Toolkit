@@ -100,6 +100,7 @@ function addTeamMember() {
     const newMember = {
         id: Date.now(), // Unique ID
         name: name,
+        role: 'MED', // Default role
         timestamp: Date.now(),
         dateAdded: new Date().toLocaleString('de-DE', {
             day: '2-digit',
@@ -115,6 +116,11 @@ function addTeamMember() {
     
     // Save and update displays
     saveTeamMembers(members);
+    
+    // Update ship assignment name suggestions
+    if (typeof updateCrewNameDatalist === 'function') {
+        updateCrewNameDatalist();
+    }
     
     // Clear input
     input.value = '';
@@ -134,6 +140,11 @@ function removeTeamMember(memberId) {
     const filteredMembers = members.filter(m => m.id !== memberId);
     saveTeamMembers(filteredMembers);
     updateTeamMembersList();
+    
+    // Update ship assignment name suggestions
+    if (typeof updateCrewNameDatalist === 'function') {
+        updateCrewNameDatalist();
+    }
     
     // Hide warning if we're back under limit
     if (filteredMembers.length < 8) {
@@ -169,12 +180,25 @@ function updateTeamMembersList() {
     
     let html = '';
     members.forEach(member => {
+        // Ensure role exists (for backwards compatibility)
+        if (!member.role) member.role = 'MED';
+        
         html += `
             <div class="flex items-center justify-between gap-3 rounded-lg border border-gray-600 bg-gray-700/50 px-4 py-3">
                 <div class="flex-1">
                     <div class="font-medium text-white">${escapeHtml(member.name)}</div>
                     <div class="text-xs text-gray-400">Added: ${member.dateAdded}</div>
                 </div>
+                <select 
+                    onchange="updateTeamMemberRole(${member.id}, this.value)"
+                    class="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                    <option value="PIL" ${member.role === 'PIL' ? 'selected' : ''}>PIL</option>
+                    <option value="LEAD" ${member.role === 'LEAD' ? 'selected' : ''}>LEAD</option>
+                    <option value="MED" ${member.role === 'MED' ? 'selected' : ''}>MED</option>
+                    <option value="SEC" ${member.role === 'SEC' ? 'selected' : ''}>SEC</option>
+                    <option value="CAP" ${member.role === 'CAP' ? 'selected' : ''}>CAP</option>
+                </select>
                 <button 
                     onclick="removeTeamMember(${member.id})"
                     class="rounded-lg border border-red-700 bg-red-900/50 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-800 hover:text-white"
@@ -214,12 +238,25 @@ function updateHomeTeamDisplay() {
     
     let html = '';
     members.forEach(member => {
+        // Ensure role exists (for backwards compatibility)
+        if (!member.role) member.role = 'MED';
+        
         html += `
             <div class="flex items-center justify-between gap-3 rounded-lg border border-gray-600 bg-gray-700/50 px-4 py-3">
                 <div class="flex-1">
                     <div class="font-medium text-white">${escapeHtml(member.name)}</div>
                     <div class="text-xs text-gray-400">Added: ${member.dateAdded}</div>
                 </div>
+                <select 
+                    onchange="updateTeamMemberRole(${member.id}, this.value)"
+                    class="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                    <option value="PIL" ${member.role === 'PIL' ? 'selected' : ''}>PIL</option>
+                    <option value="LEAD" ${member.role === 'LEAD' ? 'selected' : ''}>LEAD</option>
+                    <option value="MED" ${member.role === 'MED' ? 'selected' : ''}>MED</option>
+                    <option value="SEC" ${member.role === 'SEC' ? 'selected' : ''}>SEC</option>
+                    <option value="CAP" ${member.role === 'CAP' ? 'selected' : ''}>CAP</option>
+                </select>
             </div>
         `;
     });
@@ -244,4 +281,23 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Update a team member's role
+ * @param {number} memberId - The ID of the member to update
+ * @param {string} newRole - The new role (PIL, LEAD, MED, SEC, CAP)
+ */
+function updateTeamMemberRole(memberId, newRole) {
+    const members = getTeamMembers();
+    const member = members.find(m => m.id === memberId);
+    if (member) {
+        member.role = newRole;
+        saveTeamMembers(members);
+        
+        // Update ship assignments if this person is assigned to any ship
+        if (typeof syncTeamMemberRoleToShips === 'function') {
+            syncTeamMemberRoleToShips(member.name, newRole);
+        }
+    }
 }

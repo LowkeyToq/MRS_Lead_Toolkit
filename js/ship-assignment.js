@@ -213,7 +213,7 @@ function getCachedCrewNames() {
 }
 
 /**
- * Updates all crew name datalists with cached names.
+ * Updates all crew name datalists with cached names and team members.
  *
  * @function updateCrewNameDatalist
  */
@@ -221,8 +221,20 @@ function updateCrewNameDatalist() {
     const datalist = document.getElementById("crew-name-suggestions");
     if (!datalist) return;
 
-    const names = getCachedCrewNames();
-    datalist.innerHTML = names.map(name => `<option value="${name}">`).join("");
+    // Get cached crew names
+    const cachedNames = getCachedCrewNames();
+    
+    // Get team members from team management
+    let teamMemberNames = [];
+    if (typeof getTeamMembers === 'function') {
+        const teamMembers = getTeamMembers();
+        teamMemberNames = teamMembers.map(m => m.name);
+    }
+    
+    // Combine and deduplicate
+    const allNames = [...new Set([...teamMemberNames, ...cachedNames])];
+    
+    datalist.innerHTML = allNames.map(name => `<option value="${name}">`).join("");
 }
 
 /**
@@ -656,6 +668,7 @@ function removeCrewMember(shipId, crewId) {
 
 /**
  * Updates the role of a crew member.
+ * Also syncs the role back to team member if name matches.
  *
  * @function updateCrewRole
  * @param {number} shipId - The unique ID of the ship
@@ -668,6 +681,16 @@ function updateCrewRole(shipId, crewId, role) {
         const crew = ship.crew.find(c => c.id === crewId);
         if (crew) {
             crew.role = role;
+            
+            // Sync role back to team member if name matches
+            if (crew.name && typeof getTeamMembers === 'function' && typeof updateTeamMemberRole === 'function') {
+                const teamMembers = getTeamMembers();
+                const teamMember = teamMembers.find(m => m.name.toLowerCase() === crew.name.toLowerCase());
+                if (teamMember) {
+                    updateTeamMemberRole(teamMember.id, role);
+                }
+            }
+            
             updatePreview();
             saveShipAssignments();
         }
@@ -714,6 +737,18 @@ function updateCrewName(shipId, crewId, name) {
             crew.name = name;
             // Cache the Discord ID -> Name association
             cacheCrewMember(crew.discordId, name);
+            
+            // Sync role from team member if exists
+            if (name && typeof getTeamMembers === 'function') {
+                const teamMembers = getTeamMembers();
+                const teamMember = teamMembers.find(m => m.name.toLowerCase() === name.toLowerCase());
+                if (teamMember && teamMember.role) {
+                    crew.role = teamMember.role;
+                    renderShipList();
+                    updatePreview();
+                }
+            }
+            
             saveShipAssignments();
             // Name doesn't affect preview, so no need to updatePreview()
         }
@@ -1620,6 +1655,34 @@ function showImportSuccessBanner(message) {
         setTimeout(() => {
             banner.classList.add("hidden");
         }, 4000);
+    }
+}
+
+/**
+ * Syncs a team member's role to all ship assignments where they are assigned.
+ * Called when a team member's role is updated in the Home tab.
+ *
+ * @function syncTeamMemberRoleToShips
+ * @param {string} memberName - The name of the team member
+ * @param {string} newRole - The new role to apply
+ */
+function syncTeamMemberRoleToShips(memberName, newRole) {
+    if (!memberName) return;
+    
+    let updated = false;
+    ships.forEach(ship => {
+        ship.crew.forEach(crew => {
+            if (crew.name && crew.name.toLowerCase() === memberName.toLowerCase()) {
+                crew.role = newRole;
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        renderShipList();
+        updatePreview();
+        saveShipAssignments();
     }
 }
 
