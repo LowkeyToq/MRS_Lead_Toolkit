@@ -76,8 +76,10 @@ function closeStandByModal() {
  * Add a new team member
  */
 function addTeamMember() {
-    const input = document.getElementById('medrunner-name-input');
-    const name = input.value.trim();
+    const nameInput = document.getElementById('medrunner-name-input');
+    const discordInput = document.getElementById('medrunner-discord-input');
+    const name = nameInput.value.trim();
+    const discordId = discordInput.value.trim();
     
     if (!name) {
         alert('Please enter a medrunner name.');
@@ -96,11 +98,19 @@ function addTeamMember() {
         // Still allow adding, just show warning
     }
     
+    // Determine role: if name matches lead name, assign LEAD role, otherwise default to MED
+    let newRole = 'MED';
+    const leadNameInput = document.getElementById('lead-name');
+    if (leadNameInput && leadNameInput.value.trim().toLowerCase() === name.toLowerCase()) {
+        newRole = 'LEAD';
+    }
+    
     // Create new team member object
     const newMember = {
         id: Date.now(), // Unique ID
         name: name,
-        role: 'MED', // Default role
+        discordId: discordId || '',
+        role: newRole,
         timestamp: Date.now(),
         dateAdded: new Date().toLocaleString('de-DE', {
             day: '2-digit',
@@ -122,8 +132,9 @@ function addTeamMember() {
         updateCrewNameDatalist();
     }
     
-    // Clear input
-    input.value = '';
+    // Clear inputs
+    nameInput.value = '';
+    discordInput.value = '';
     
     // Update the list in modal
     updateTeamMembersList();
@@ -187,14 +198,16 @@ function updateTeamMembersList() {
             <div class="flex items-center justify-between gap-3 rounded-lg border border-gray-600 bg-gray-700/50 px-4 py-3">
                 <div class="flex-1">
                     <div class="font-medium text-white">${escapeHtml(member.name)}</div>
-                    <div class="text-xs text-gray-400">Added: ${member.dateAdded}</div>
+                    <div class="text-xs text-gray-400">
+                        Added: ${member.dateAdded}
+                        ${member.discordId ? `<span class="ml-2">• Discord: ${member.discordId}</span>` : ''}
+                    </div>
                 </div>
                 <select 
                     onchange="updateTeamMemberRole(${member.id}, this.value)"
                     class="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                     <option value="PIL" ${member.role === 'PIL' ? 'selected' : ''}>PIL</option>
-                    <option value="LEAD" ${member.role === 'LEAD' ? 'selected' : ''}>LEAD</option>
                     <option value="MED" ${member.role === 'MED' ? 'selected' : ''}>MED</option>
                     <option value="SEC" ${member.role === 'SEC' ? 'selected' : ''}>SEC</option>
                     <option value="CAP" ${member.role === 'CAP' ? 'selected' : ''}>CAP</option>
@@ -245,14 +258,16 @@ function updateHomeTeamDisplay() {
             <div class="flex items-center justify-between gap-3 rounded-lg border border-gray-600 bg-gray-700/50 px-4 py-3">
                 <div class="flex-1">
                     <div class="font-medium text-white">${escapeHtml(member.name)}</div>
-                    <div class="text-xs text-gray-400">Added: ${member.dateAdded}</div>
+                    <div class="text-xs text-gray-400">
+                        Added: ${member.dateAdded}
+                        ${member.discordId ? `<span class="ml-2">• Discord: ${member.discordId}</span>` : ''}
+                    </div>
                 </div>
                 <select 
                     onchange="updateTeamMemberRole(${member.id}, this.value)"
                     class="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                     <option value="PIL" ${member.role === 'PIL' ? 'selected' : ''}>PIL</option>
-                    <option value="LEAD" ${member.role === 'LEAD' ? 'selected' : ''}>LEAD</option>
                     <option value="MED" ${member.role === 'MED' ? 'selected' : ''}>MED</option>
                     <option value="SEC" ${member.role === 'SEC' ? 'selected' : ''}>SEC</option>
                     <option value="CAP" ${member.role === 'CAP' ? 'selected' : ''}>CAP</option>

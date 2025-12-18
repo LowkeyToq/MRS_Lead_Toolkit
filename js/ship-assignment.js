@@ -745,12 +745,24 @@ function updateCrewName(shipId, crewId, name) {
             // Cache the Discord ID -> Name association
             cacheCrewMember(crew.discordId, name);
             
-            // Sync role from team member if exists
+            // Sync role AND Discord ID from team member if exists
             if (name && typeof getTeamMembers === 'function') {
                 const teamMembers = getTeamMembers();
                 const teamMember = teamMembers.find(m => m.name.toLowerCase() === name.toLowerCase());
-                if (teamMember && teamMember.role) {
-                    crew.role = teamMember.role;
+                if (teamMember) {
+                    // Sync role
+                    if (teamMember.role) {
+                        crew.role = teamMember.role;
+                    }
+                    // Sync Discord ID
+                    if (teamMember.discordId) {
+                        crew.discordId = teamMember.discordId;
+                        // Update the Discord ID input field in UI
+                        const discordInput = document.querySelector(`input[data-crew-id="${crewId}"][data-discord-field="true"]`);
+                        if (discordInput) {
+                            discordInput.value = teamMember.discordId;
+                        }
+                    }
                     renderShipList();
                     updatePreview();
                 }
@@ -1023,8 +1035,10 @@ function renderShips() {
                 crew.id
             }, this.value)" class="flex-none min-w-[100px] rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-gray-300 transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 md:w-auto">
                     ${Object.keys(EMOJIS.roles)
+                        .filter(role => role !== 'LEAD')
                         .map(role => `<option value="${role}" ${crew.role === role ? "selected" : ""}>${role}</option>`)
                         .join("")}
+                    ${crew.role === 'LEAD' ? `<option value="LEAD" selected>LEAD</option>` : ''}
                 </select>
 
                 <!-- Name Input (with autocomplete from cached names) -->
@@ -1693,13 +1707,29 @@ function syncTeamMemberRoleToShips(memberName, newRole) {
     }
 }
 
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-// Load saved ship assignments from localStorage, or start fresh
-if (loadShipAssignments()) {
-    console.log("Ship assignments restored from cache");
+/**
+ * Sync a team member's Discord ID to all their ship assignments
+ * @function syncTeamMemberDiscordIdToShips
+ * @param {string} memberName - The name of the team member
+ * @param {string} discordId - The new Discord ID
+ */
+function syncTeamMemberDiscordIdToShips(memberName, discordId) {
+    if (!memberName) return;
+    
+    let updated = false;
+    ships.forEach(ship => {
+        ship.crew.forEach(crew => {
+            if (crew.name && crew.name.toLowerCase() === memberName.toLowerCase()) {
+                crew.discordId = discordId;
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        renderShipList();
+        updatePreview();
+        saveShipAssignments();
+    }
 }
-renderShips();
-updatePreview();
+
