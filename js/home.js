@@ -245,6 +245,43 @@ function triggerAlarm() {
 }
 
 /**
+ * Copy position status to clipboard based on current team position
+ */
+function copyPositionStatus() {
+    const currentPosition = parseInt(localStorage.getItem(SESSION_KEYS.TEAM_POSITION) || '1');
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    const positionEmojis = {
+        1: '<:P1:1432823559364935852>',
+        2: '<:P2:1432823555698982973>',
+        3: '<:P3:1432823553186861109>',
+        4: '<:P4:1432823550997299330>',
+        5: '<:P5:1432823547902034010>',
+        6: '<:P6:1432823545746161734>',
+        7: '<:P7:1432823543518724157>',
+        8: '<:P8:1432823540733837342>'
+    };
+    
+    const positionEmoji = positionEmojis[currentPosition] || '<:P1:1432823559364935852>';
+    const standbyString = '<:SB1:1182246721129025657><:SB2:1182246723981164665><:SB3:1182246726137036891><:SB4:1182246729844797440><:SB5:1182246731447021589><:SB6:1182246733946818620><:SB7:1182246735616155648>';
+    
+    const textToCopy = `${positionEmoji}${standbyString}<t:${timestamp}:R>`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        console.log('Position status copied:', currentPosition);
+        if (typeof showCopyNotification === 'function') {
+            showCopyNotification('Position status copied to clipboard!');
+        }
+    }).catch(err => {
+        console.error('Failed to copy position status:', err);
+        if (typeof showCopyNotification === 'function') {
+            showCopyNotification('Failed to copy!', true);
+        }
+    });
+}
+
+/**
  * Get the current lead name
  * @returns {string} The current lead name
  */
