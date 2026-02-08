@@ -298,11 +298,9 @@ const LOCATIONS_DATABASE_DATA = {
                     pois: [
                         "Broken Patch",
                         "Covalex Distribution Centre S1DC06",
-                        "Cutter's Rig",
                         "Downed Relay AC-652",
                         "Dupree Industrial Manufacturing Facility",
                         "Echo Isle",
-                        "Finn's Folly",
                         "Greycat Stanton I Production Complex-B",
                         "HDMO-Calthrope",
                         "HDMS-Edmond",
@@ -354,16 +352,10 @@ const LOCATIONS_DATABASE_DATA = {
                         "HDSF-Zacharias",
                         "Lorville Outskirts",
                         "Lowdown",
-                        "Ludlow",
-                        "Maker's Point",
-                        "Picker's Field",
-                        "Rappel",
                         "Reclamation & Disposal Orinth",
                         "Rico's Remains",
                         "Sakura Sun Magnolia Workcenter",
-                        "Trilo",
-                        "Weeping Cove",
-                        "Zephyr"
+                        "Trilo"
                     ],
                     stations: ["Everus Harbor"],
                     lagrangeStations: [
@@ -417,7 +409,7 @@ const LOCATIONS_DATABASE_DATA = {
                     type: "gas_giant",
                     landingZones: ["Orison"],
                     settlements: ["Cloudrest Retreat", "Empyrean Park", "Prospect Point"],
-                    stations: ["Port Olisar", "Security Post Kareah", "Seraphim Station", "CommArray ST2-55"],
+                    stations: ["Port Olisar", "Security Post Kareah", "Seraphim Station", "CommArray ST2-55", "GrimHEX"],
                     lagrangeStations: ["CRU-L1 (Ambitious Dream)", "CRU-L4 (Shallow Frontier)", "CRU-L5 (Beautiful Glen)"],
                     moons: {
                         CELLIN: {
@@ -1852,7 +1844,7 @@ function generateAARPreview() {
     const gunshipValue = gunship !== "Select ship..." ? gunship : "";
     const medical = document.getElementById("aar-medical-value").textContent;
     // Treat "None" and "Select ship..." as empty (no separate medical ship)
-    const medicalValue = (medical !== "Select ship..." && medical !== "None") ? medical : "";
+    const medicalValue = medical !== "Select ship..." && medical !== "None" ? medical : "";
     const capShipsArray = getSelectedCAPShips();
     const capShipsText = capShipsArray.length > 0 ? capShipsArray.join(", ") : "";
     const additionalShips = document.getElementById("aar-additional-ships").value;
