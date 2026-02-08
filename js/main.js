@@ -9,6 +9,15 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Medrunner Operations Tool - Initializing...");
 
+    // Initialize Home module
+    initializeHome();
+
+    // Initialize Team Management module
+    initializeTeamManagement();
+
+    // Initialize alert timer visibility
+    updateAlertTimerVisibility();
+
     // Initialize Ships API - fetch ship list from API
     initializeShips();
 

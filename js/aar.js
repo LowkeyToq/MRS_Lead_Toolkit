@@ -159,6 +159,11 @@ function resetAlertTimer(clearTimestamps = false) {
         generateAARPreview();
     }
 
+    // Deactivate alert from home module
+    if (typeof deactivateAlert === 'function') {
+        deactivateAlert();
+    }
+
     updateTimerButton();
     updateTimerDisplay();
 }
